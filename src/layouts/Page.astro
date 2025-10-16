@@ -1,0 +1,35 @@
+---
+const { frontmatter, title: t, description: d } = Astro.props;
+const title = t ?? frontmatter?.title ?? 'YOUR NAME';
+const description = d ?? frontmatter?.description ?? '';
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description ? <meta name="description" content={description} /> : null}
+    <meta property="og:title" content={title} />
+    {description ? <meta property="og:description" content={description} /> : null}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="YOUR NAME" />
+    <link rel="canonical" href={Astro.url.href} />
+    <meta name="author" content="YOUR NAME" />
+    <meta name="robots" content="index, follow" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description ? <meta name="twitter:description" content={description} /> : null}
+</head>
+<body>
+<SiteHeader />
+<div class="wrap">
+    <slot />
+</div>
+<SiteFooter />
+</body>
+</html>

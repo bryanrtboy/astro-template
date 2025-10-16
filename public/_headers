@@ -1,0 +1,23 @@
+# Default rule — for HTML files
+/*
+  Cache-Control: max-age=0, must-revalidate
+
+# For Astro's static JS/CSS (hashed filenames)
+ /assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# For full-size images
+ /images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# For thumbnails
+ /thumbs/*
+  Cache-Control: public, max-age=31536000, immutable
+
+#to silence a Lighthouse complaint
+
+/animation
+  Content-Type: text/html; charset=utf-8
+
+/animation/
+  Content-Type: text/html; charset=utf-8

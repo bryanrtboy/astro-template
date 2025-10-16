@@ -1,0 +1,666 @@
+/* =========================================================
+   1) CSS Custom Properties & Base Resets
+   =======================================================*/
+:root {
+    --bg: #fbfcf2;
+    --fg: #464a52;
+    --muted: #606670;
+    --hdr: rgba(234, 235, 225, .9);
+    --ar: 1;
+    --hero-ar: .5;
+    --header-offset: 220px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+a { color: inherit; }
+
+.project-summary a { text-decoration: underline; }
+
+
+/* =========================================================
+   2) Layout Wrappers & Generic Stacks
+   =======================================================*/
+.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem;
+}
+
+/* Keep header wrap margins consistent with body wrap */
+.site-header .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 1.25rem;   /* match .wrap */
+    padding-right: 1.25rem;  /* match .wrap */
+}
+
+
+.h1, h1 {
+    font-size: 1.5rem;
+    margin: .3rem 0 1rem;
+}
+
+.hstack {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+.hstack a { text-decoration: none; }
+
+.badge {
+    font-size: .75rem;
+    color: var(--fg);
+    background-color: var(--hdr);
+    padding: .15rem .5rem;
+    border-radius: 999px;
+}
+
+.section-copy {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+.section-copy p {
+    margin-bottom: 0.8rem;
+    max-width: 60ch;
+}
+
+.resume th {
+    text-align: left;
+    padding-top: 20px;
+}
+
+
+/* =========================================================
+   3) Header / Nav / Site Title
+   =======================================================*/
+header {
+    padding: 1rem 0;
+    /* border-bottom: 1px solid #222; */
+    position: sticky;
+    top: 0;
+    background: var(--hdr);
+    backdrop-filter: saturate(140%) blur(6px);
+    z-index: 1;
+}
+
+nav {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.site-title {
+    font-weight: 700;
+    letter-spacing: .02em;
+    font-size: 1.25rem;
+    margin-right: 1rem;
+}
+
+.site-header {
+    /*display: flex;*/
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* =========================================================
+   4) Header Search (top-right)
+   =======================================================*/
+.searchbox {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.searchbox input[type="search"] {
+    padding: .45rem .6rem;
+    border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    border-radius: .1rem;
+    min-width: 16ch;
+    background:var(--bg);
+}
+
+.icon-btn{
+    display:inline-grid; place-items:center;
+    width:36px; height:36px;
+    border:1px solid color-mix(in srgb, currentColor 20%, transparent);
+    border-radius:.5rem;
+    background:transparent;
+    color:inherit;
+    padding:0; cursor:pointer;
+}
+.icon-btn:hover{ background: color-mix(in srgb, currentColor 6%, transparent); }
+.icon-btn:focus-visible{ outline:2px solid color-mix(in srgb, currentColor 35%, transparent); outline-offset:2px; }
+.icon-btn svg{ display:block; }
+
+/* push the search container to the right edge of the header row */
+.site-header .right {
+    margin-left: auto;
+    flex-shrink: 0;        /* keeps it from collapsing on tight widths */
+}
+
+
+/* hide input until activated or populated */
+.searchbox input[type="search"] {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: width 0.25s ease, opacity 0.2s ease;
+    border: 1px solid transparent;
+    padding: 0;
+}
+
+/* show when active or has query */
+.searchbox.active input[type="search"] {
+    width: min(24ch, 32vw);
+    opacity: 1;
+    pointer-events: auto;
+    border: 1px solid var(--muted, #ddd);
+    border-radius: 0.1rem;
+    padding: 0.45rem 0.6rem;
+    background: #fff;
+}
+
+
+/* Meta line */
+.meta {
+    color: var(--muted, #666);
+    margin: .25rem 0 1rem;
+}
+
+/* Structure toggles */
+.search-page { display: block; }
+.results-pages[hidden],
+.results-images[hidden],
+.pager[hidden],
+.meta[hidden] { display: none !important; }
+.results-pages:not([hidden]),
+.results-images:not([hidden]) {
+    display: block;
+    margin-top: 1rem;
+}
+
+/* Image results grid */
+.results.grid {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    grid-auto-rows: auto;
+}
+.results.grid .card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 0.5rem;
+    overflow: visible;
+}
+.thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #eee;
+    border-radius: 0.5rem;
+}
+.thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.card-body { padding: 0.4rem 0; }
+.card-body .title {
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--fg, #333);
+    display: block;
+    margin-bottom: 0.2rem;
+}
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.2rem;
+}
+.chip {
+    padding: 0.1rem 0;
+    font-size: 0.7rem;
+}
+.snippet {
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+mark {
+    background: #ffe08a;
+    border-radius: 0.15em;
+    padding: 0 0.1em;
+}
+.also-on {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.3rem;
+}
+
+/* Pager */
+.pager {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+}
+.pager-btn {
+    padding: 0.35rem 0.7rem;
+    border: 1px solid #ddd;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    background: #fafafa;
+    color: #333;
+}
+.pager-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Search results: make <picture> fill card like the old <img> */
+.results-images .card picture,
+.results-images .card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   6) Gallery Grid (Masonry + Uniform)
+   =======================================================*/
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    column-gap: 3px;
+    row-gap: 3px;
+    grid-auto-flow: dense;
+    grid-auto-rows: 10px;     /* row unit; JS uses this value */
+    align-items: start;       /* don't stretch items vertically */
+}
+
+/* Cards (base) */
+.card {
+    display: block;
+    background: var(--hdr);
+    border: none;
+    overflow: hidden;         /* prevents overlap while span is computed */
+    grid-row-end: span 1;     /* default; replaced inline and by JS */
+    position: relative;       /* anchor becomes the positioning context */
+    isolation: isolate;       /* keeps overlay blending contained */
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 400px;
+    aspect-ratio: calc(1 / var(--ar, 0.75));
+}
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Overlay (title/subtitle) */
+.card .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: .75rem;
+    text-align: center;
+    background: rgba(0, 0, 0, .5);
+    color: #f7f7f7;
+    font-size: .95rem;
+    line-height: 1.3;
+    opacity: 0;
+    transition: opacity .18s ease-in-out;
+    pointer-events: none; /* don’t block clicks; we’re inside the link */
+}
+.card .overlay .title {
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+.card .overlay .sub {
+    opacity: .85;
+    font-size: .85em;
+    margin-top: .25rem;
+}
+
+/* Overlay reveal + image ghosting */
+.card:hover .overlay,
+.card:focus-within .overlay,
+.card.reveal .overlay { opacity: 1; }
+.card:hover img,
+.card:focus-within img,
+.card.reveal img {
+    filter: brightness(0.6) saturate(90%);
+    transition: filter .18s ease-in-out;
+}
+
+/* Masonry-specific */
+.grid.masonry { container-type: inline-size; }
+.grid.masonry .card {
+    contain: content;
+    --gap: 10px;
+}
+/* intrinsic reservation uses the same --cols */
+.grid.masonry .card {
+    --colw: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols));
+    contain-intrinsic-size: auto calc(var(--colw) * var(--ar, 0.75));
+}
+
+/* Uniform (JS-free) */
+.grid.uniform {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-auto-rows: auto;
+    gap: 10px;
+}
+.grid.uniform .card {
+    aspect-ratio: 1 / 1;
+    grid-row-end: auto !important; /* ignore masonry spans */
+}
+.grid.uniform .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   7) Hero (CLS-safe frame + overlays)
+   =======================================================*/
+.wrap .hero {
+    display: block;
+    margin: 0 0 1rem 0; /* pushes the rest of the page down */
+}
+
+.hero-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--hero-ar, 16/9); /* reserve height to avoid CLS */
+    background: var(--hdr);
+    border-radius: 1px;
+    overflow: hidden;
+}
+.hero-frame picture,
+.hero-frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.hero-frame img {
+    object-fit: cover;
+    object-position: center;
+}
+
+.hero-figure {
+    margin: 0;
+    display: block;
+    position: relative;
+}
+
+/* Overlay container (linked or not) */
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
+
+/* Linked/captioned */
+.hero-overlay.has-caption {
+    text-decoration: none;
+    color: inherit;
+    background: linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0) 40%);
+    opacity: 0;
+    transition: opacity 150ms ease-in-out;
+    cursor: pointer;
+}
+.hero-figure:hover .hero-overlay.has-caption,
+.hero-figure:focus-within .hero-overlay.has-caption { opacity: 1; }
+
+/* Non-linked/no-caption */
+.hero-overlay.no-caption {
+    background: none;
+    pointer-events: none;
+    opacity: 1;
+}
+
+/* Caption chip */
+.hero-chip {
+    position: absolute;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    max-width: calc(100% - 1.5rem);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.5rem;
+    font-size: clamp(0.9rem, 0.8rem + 0.5vw, 1.05rem);
+    line-height: 1.25;
+    color: #fff;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+}
+.hero-chip .hero-year {
+    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Intrinsic mode (optional) */
+.wrap .hero.hero--intrinsic .hero-frame { aspect-ratio: auto; }
+.wrap .hero.hero--intrinsic .hero-frame picture,
+.wrap .hero.hero--intrinsic .hero-frame img {
+    height: auto; /* not 100% in intrinsic mode */
+    width: 100%;
+}
+.wrap .hero.hero--intrinsic .hero-frame img { object-fit: contain; }
+
+
+/* =========================================================
+   8) Lightbox
+   =======================================================*/
+.no-scroll { overflow: hidden; }
+
+.lightbox[hidden] { display: none !important; }
+
+.lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, .92);
+    color: #f7f7f7;
+    display: grid;
+    grid-template-rows: 56px 1fr 56px;
+    grid-template-columns: 56px 1fr 56px;
+}
+
+.lb-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.lb-header, .lb-stage {
+    position: relative;
+    z-index: 1;
+}
+
+.lb-prev, .lb-next, .lb-close {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+}
+.lb-prev:hover, .lb-next:hover, .lb-close:hover {
+    background: rgba(255,255,255,.08);
+}
+
+.lb-prev, .lb-next {
+    position: relative;
+    z-index: 1;
+}
+.lb-prev::before { content: "◀"; font-size: 20px; }
+.lb-next::before { content: "▶"; font-size: 20px; }
+
+.lb-header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 .75rem;
+}
+
+.lb-prev { grid-row: 2; grid-column: 1; justify-self: center; }
+.lb-next { grid-row: 2; grid-column: 3; justify-self: center; }
+
+/* Stage stacks caption ABOVE image */
+.lb-stage {
+    grid-row: 2;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Caption block */
+.lb-caption {
+    display: grid;
+    gap: .35rem;
+    text-align: center;
+    max-width: min(92vw, 900px);
+}
+.lb-titleline { font-weight: 600; }
+.lb-meta { opacity: .85; font-size: .9rem; }
+.lb-cta {
+    margin-top: .1rem;
+    font-size: .9rem;
+    color: #ddd;
+}
+.lb-cta .lb-link { color: #fff; text-decoration: underline; }
+.lb-cta .lb-sep { opacity: .65; margin: 0 .35rem; }
+
+/* Details body (toggled by JS) */
+.lb-details {
+    margin: .25rem 3rem;
+    font-size: .9rem;
+    color: #ddd;
+    display: none;
+    text-align: justify;
+}
+.lb-details.show { display: block; }
+
+/* Image sizing: base vs details-open */
+.lb-img {
+    max-width: 92vw;
+    max-height: 84vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .45);
+}
+.lightbox.details-open .lb-img { max-height: 60vh; }
+
+/* =========================================================
+   10) Footer
+   =======================================================*/
+.site-footer {
+    border-top: 1px solid var(--hdr);
+    margin-top: 2rem;
+    background: var(--bg);
+}
+.footer-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+}
+.footer-links {
+    display: flex;
+    gap: .9rem;
+    flex-wrap: wrap;
+    font-size: .95rem;
+}
+.footer-links a {
+    color: var(--fg);
+    text-decoration: none;
+}
+.footer-links a:hover { text-decoration: underline; }
+.footer-name { font-size: .9rem; }
+
+
+/* =========================================================
+   11) Utilities
+   =======================================================*/
+[id] { scroll-margin-top: var(--header-offset); }
+
+/* =========================================================
+   12) Video embedding
+   =======================================================*/
+.responsive-video {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+}
+
+.responsive-video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* =========================================================
+   12) Responsive (Media & Container Queries)
+   =======================================================*/
+/* Masonry columns (container queries) */
+@container (max-width: 520px)  { .grid.masonry { --cols: 1; } }
+@container (min-width: 521px) and (max-width: 900px)  { .grid.masonry { --cols: 2; } }
+@container (min-width: 901px) and (max-width: 1151px) { .grid.masonry { --cols: 4; } }
+@container (min-width: 1152px)                         { .grid.masonry { --cols: 5; } }
+
+/* Search input wider on larger screens */
+@media (min-width: 900px) {
+    .searchbox input[type="search"] { min-width: 24ch; }
+}
+
+
+/* Small screens */
+@media (max-width: 480px) {
+    .lb-prev, .lb-next, .lb-close { width: 40px; height: 40px; }
+    .lightbox.details-open .lb-img { max-height: 50vh; }
+    :root { --header-offset: 196px; }
+}

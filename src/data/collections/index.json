@@ -1,0 +1,32 @@
+[
+  {
+    "section": "prints",
+    "slug": "exolith-series",
+    "title": "exolith series",
+    "count": 5
+  },
+  {
+    "section": "prints",
+    "slug": "systems",
+    "title": "systems",
+    "count": 4
+  },
+  {
+    "section": "applications",
+    "slug": "visual-synthesizer",
+    "title": "Visual Synthesizer",
+    "count": 6
+  },
+  {
+    "section": "installations",
+    "slug": "exhibition-space",
+    "title": "Exhibition Space",
+    "count": 13
+  },
+  {
+    "section": "installations",
+    "slug": "hypocenter",
+    "title": "hypocenter",
+    "count": 5
+  }
+]

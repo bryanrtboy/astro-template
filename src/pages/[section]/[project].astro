@@ -1,0 +1,49 @@
+---
+import '../../styles/global.css';
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Grid from '../../components/Grid.astro';
+import { getEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+    const collIndexMod = await import('../../data/collections/index.json');
+    const collIndex = (collIndexMod.default ?? []) as Array<{ section: string; slug: string }>;
+    return collIndex.map(({ section, slug }) => ({ params: { section, project: slug } }));
+}
+
+const { section, project } = Astro.params;
+
+// images/items for this collection (unchanged)
+const collMod = await import(`../../data/collections/${section}/${project}.json`);
+const { title, items } = collMod.default as { title: string; items: any[] };
+
+// 👇 Try to load MD/MDX content from the 'projects' collection.
+// Slug is the path under src/content/projects/** without the extension.
+let Summary: any = null;
+try {
+    const entry = await getEntry('projects', `${section}/${project}`);
+    if (entry) {
+        const rendered = await entry.render();
+        Summary = rendered.Content;
+    }
+} catch {
+    // no summary is fine
+}
+
+// 🆕 Create a description from the data
+let description = '';
+if (items.length > 0) {
+    description =
+        items[0].desc ||
+        `Artwork series “${title}” by YOUR NAME — ${items.length} works in ${section}.`;
+}
+
+---
+<Base title={`${title} – ${section}`} description={description}>
+    <SiteHeader />
+    <div class="wrap">
+        <h1>{title}</h1>
+        {Summary ? <article class="project-summary"><Summary /></article> : null}
+        <Grid items={items} />
+    </div>
+</Base>

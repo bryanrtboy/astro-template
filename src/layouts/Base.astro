@@ -1,0 +1,128 @@
+---
+const { title = 'YOUR NAME', description = '' } = Astro.props;
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<!DOCTYPE html>
+<html
+        lang="en"
+        data-anchor-header-selector=".site-header"
+        data-anchor-header-fallback="72"
+        data-anchor-delay-until-load="true"
+>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+
+    {description ? <meta name="description" content={description} /> : null}
+
+    <meta property="og:title" content={title} />
+    {description ? <meta property="og:description" content={description} /> : null}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="YOUR NAME" />
+    <link rel="canonical" href={Astro.url.href} />
+    <meta name="author" content="YOUR NAME" />
+    <meta name="robots" content="index, follow" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description ? <meta name="twitter:description" content={description} /> : null}
+
+    <!-- Global offset styles -->
+    <style is:global>
+        :root { --header-offset: 72px; }
+        [id] { scroll-margin-top: var(--header-offset); }
+
+        /* Anchor target highlight — minimal */
+        .card.anchor-highlight {
+            outline: 4px solid #1e90ff;
+            outline-offset: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Kill the dark hover overlay while highlighted, keep type visible */
+        .card.anchor-highlight .overlay {
+            background: transparent !important;
+            opacity: 1 !important;
+        }
+    </style>
+
+    <!-- Base.astro -->
+    <script is:inline>
+        if (location.hash) {
+            const s = document.createElement('script');
+            s.src = '/js/anchor-hash-fix.js'; // file lives at: public/js/anchor-hash-fix.js
+            s.defer = true;
+            document.head.appendChild(s);
+        }
+    </script>
+
+    <!-- Hash-linked LCP: promote the actual image once it's in the DOM (no preload) -->
+    <script is:inline>
+        (function() {
+            if (!location.hash) return;
+
+            const stem = decodeURIComponent(location.hash.slice(1));
+            if (!stem) return;
+
+            function promote() {
+                const el = document.getElementById(stem);
+                if (!el) return false;
+
+                const img = el.querySelector('img');
+                if (!img) return false;
+
+                // Make the real target the LCP for the browser
+                img.loading = 'eager';
+                img.decoding = 'async';
+                img.setAttribute('fetchpriority', 'high');
+                return true;
+            }
+
+            if (!promote()) {
+                document.addEventListener('DOMContentLoaded', promote, { once: true });
+                window.addEventListener('load', promote, { once: true });
+            }
+        })();
+    </script>
+
+    <script is:inline>
+        (function () {
+            if (!location.hash) return;
+            const id = decodeURIComponent(location.hash.slice(1));
+    
+            function highlight() {
+                const raw = document.getElementById(id);
+                if (!raw) return;
+                const card = raw.matches('a.card, .card') ? raw : raw.closest('a.card, .card');
+                if (!card) return;
+    
+                // Apply highlight
+                card.classList.add('anchor-highlight');
+    
+                // After a short time, remove highlight and blur to clear hover/focus state
+                setTimeout(() => {
+                    card.classList.remove('anchor-highlight');
+                    try {
+                        card.blur(); // clears :focus, which often drives the overlay
+                    } catch (e) {}
+                }, 2500);
+            }
+    
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(highlight, 0);
+            } else {
+                document.addEventListener('DOMContentLoaded', highlight, { once: true });
+            }
+        })();
+    </script>
+
+</head>
+
+<body>
+<slot />
+<SiteFooter />
+</body>
+</html>

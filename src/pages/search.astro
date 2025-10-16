@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import searchClientUrl from '../scripts/search-client.ts?url';
+
+// You can read q here, but on a fully static site it won't change per request.
+// (We still keep it so the title/SEO are reasonable in dev.)
+const url = new URL(Astro.request.url);
+const q = (url.searchParams.get('q') || '').trim();
+
+export const prerender = true;
+---
+
+<Base title="Search results" description="Site search results">
+    <SiteHeader />
+
+    <div class="wrap search-page">
+        <h1>Search Results</h1>
+
+        <p id="search-meta" class="meta" hidden></p>
+
+        <!-- Pages (MD/MDX) -->
+        <section id="results-pages" class="results-pages" hidden>
+            <h2 class="section-title">Pages</h2>
+            <ul class="page-list"></ul>
+        </section>
+
+        <!-- Images -->
+        <section id="results-images" class="results-images" hidden>
+            <h2 class="section-title">Images</h2>
+            <!-- Use same wrapper class names as your grid -->
+            <div id="image-grid" class="grid uniform" data-grid></div>
+
+            <nav class="pager" aria-label="Image result pages" hidden>
+                <a class="pager-btn" id="prevPage" href="#"></a>
+                <span class="pager-info" id="pageInfo"></span>
+                <a class="pager-btn" id="nextPage" href="#"></a>
+            </nav>
+        </section>
+
+        <p id="empty-state">Type a phrase above to search pages and images.</p>
+    </div>
+
+    <!-- at the bottom of pages/search.astro -->
+    <script type="module" src={searchClientUrl}></script>
+
+
+</Base>

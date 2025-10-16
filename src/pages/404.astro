@@ -1,0 +1,200 @@
+---
+import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+---
+
+<Base title="404 — Not Found" description="This page wandered off. Let’s find your way back.">
+    <SiteHeader/>
+
+    <!-- Fixed, viewport-wide layers (stay out of layout) -->
+    <canvas id="bg" aria-hidden="true"></canvas>
+    <div id="spotlight" aria-hidden="true"></div>
+    <div id="moth" role="img" aria-label="A moth circling the light">
+        <svg viewBox="0 0 120 90" width="80" height="60" aria-hidden="true">
+            <defs>
+                <radialGradient id="mothGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="white" stop-opacity="0.9" />
+                    <stop offset="100%" stop-color="white" stop-opacity="0" />
+                </radialGradient>
+            </defs>
+            <circle cx="60" cy="45" r="18" fill="url(#mothGlow)" opacity="0.3"/>
+            <rect x="56" y="34" width="8" height="22" rx="4" fill="#5a544d"/>
+            <circle cx="60" cy="32" r="5" fill="#5a544d"/>
+            <path d="M58 28 C50 20, 46 18, 44 16" stroke="#5a544d" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M62 28 C70 20, 74 18, 76 16" stroke="#5a544d" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M60 40 C 20 20, 18 60, 58 52 Z" fill="#cfc9b8"/>
+            <path d="M60 40 C 100 20, 102 60, 62 52 Z" fill="#cfc9b8"/>
+            <path d="M58 48 C 36 42, 36 56, 56 50" stroke="#a79f8b" stroke-width="1.5" fill="none" opacity=".7"/>
+            <path d="M62 48 C 84 42, 84 56, 64 50" stroke="#a79f8b" stroke-width="1.5" fill="none" opacity=".7"/>
+        </svg>
+    </div>
+
+    <!-- Content panel in normal flow -->
+    <main class="panel">
+        <h1>404 — Page not found</h1>
+        <p class="lede">You’ve reached a quiet corner…</p>
+        
+    </main>
+
+    <style>
+        :root { --bg:#fbfcf2; --fg:#464a52; --muted:#7d818a; --sx:50%;--sy:40%; --mx:50vw; --my:4vh;--ma:0rad; }
+
+        /* Fixed viewport layers so global.css can't move them */
+        #bg, #spotlight, #moth { position: fixed; inset: 0; pointer-events: none; }
+        #bg {
+            z-index: 0; width: 100vw; height: 100vh; display: block;
+            max-width: none !important; max-height: none !important;
+        }
+        #spotlight {
+            z-index: 1;
+            background: radial-gradient(200px 140px at var(--sx,50%) var(--sy,40%),
+            rgba(255,255,240,0.55), rgba(255,255,240,0) 70%);
+            mix-blend-mode: soft-light;
+            opacity: 0; transition: opacity .4s ease;
+        }
+        #moth {
+            z-index: 2; width: 80px; height: 60px;
+            transform: translate(calc(var(--mx,50vw) - 40px), calc(var(--my,40vh) - 30px)) rotate(var(--ma,0rad));
+            will-change: transform;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,.18));
+            opacity: 0; transition: opacity .3s ease;
+        }
+
+        .panel {
+            position: relative; z-index: 1;
+            max-width: 760px; margin: 20vh auto 12vh;
+            padding: clamp(16px, 2vw, 24px);
+            text-align: center;
+            background: rgba(255,.2);
+            border: 1px solid rgba(0,0,0,.06); border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.06);
+            backdrop-filter: blur(3px);
+        }
+        h1 { margin:0 0 .25rem; color:var(--fg); font-weight:700; }
+        .lede { margin:.25rem 0 1rem; color:var(--muted); }
+        .links { display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center; margin:1rem 0 1.25rem; }
+        .btn { display:inline-block; padding:.5rem .75rem; border-radius:999px; border:1px solid rgba(0,0,0,.08);
+            text-decoration:none; color:var(--fg); background:white; box-shadow:0 2px 10px rgba(0,0,0,.04); }
+        .btn:hover { transform: translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08); }
+        .search { display:flex; gap:.5rem; justify-content:center; }
+        .search input { min-width:240px; padding:.5rem .6rem; border-radius:10px; border:1px solid rgba(0,0,0,.1); }
+        .search button { padding:.5rem .75rem; border-radius:10px; border:1px solid rgba(0,0,0,.1); background:white; color:var(--fg); }
+        .micro { margin-top:.75rem; color:var(--muted); font-size:.9rem; }
+
+        @media (prefers-reduced-motion: reduce) { #moth, #spotlight { transition:none; } }
+    </style>
+
+    <script is:inline>
+        // --- Choose mode client-side so static hosting doesn't lock it ---
+        const url = new URL(location.href);
+        let MODE = url.searchParams.get('mode');
+        if (MODE !== 'moth' && MODE !== 'glitch') MODE = Math.random() < 0.5 ? 'moth' : 'glitch';
+        document.documentElement.setAttribute('data-404-mode', MODE);
+
+        const prefersReduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // --- Canvas network (glitch mode only) ---
+        const canvas = /** @type {HTMLCanvasElement} */(document.getElementById('bg'));
+        const ctx = canvas.getContext('2d', { alpha: true });
+        const RUN_BG = MODE === 'glitch';
+
+        if (!RUN_BG) {
+            // hide and skip all canvas work in moth mode
+            canvas.style.display = 'none';
+        } else {
+            function sizeCanvas() {
+                const dpr = Math.max(1, Math.min(2, devicePixelRatio || 1));
+                const w = canvas.clientWidth = innerWidth;
+                const h = canvas.clientHeight = innerHeight;
+                canvas.width = Math.floor(w * dpr);
+                canvas.height = Math.floor(h * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+            sizeCanvas();
+            addEventListener('resize', sizeCanvas, { passive: true });
+
+            const MAX_POINTS = 120, LINK_DIST = 140, SPEED = 0.18;
+            const pts = [];
+            const R = (a,b)=>a+Math.random()*(b-a);
+            for (let i=0;i<MAX_POINTS;i++){
+                pts.push({ x:R(0,innerWidth), y:R(0,innerHeight), vx:R(-SPEED,SPEED), vy:R(-SPEED,SPEED) });
+            }
+
+            function step() {
+                ctx.clearRect(0,0,innerWidth,innerHeight);
+                ctx.fillStyle = 'rgba(236,236,228,0.92)';
+                ctx.fillRect(0,0,innerWidth,innerHeight);
+
+                for (const p of pts){
+                    p.x+=p.vx; p.y+=p.vy;
+                    if (p.x<-10) p.x=innerWidth+10; if (p.x>innerWidth+10) p.x=-10;
+                    if (p.y<-10) p.y=innerHeight+10; if (p.y>innerHeight+10) p.y=-10;
+                }
+
+                ctx.lineWidth=1; ctx.strokeStyle='rgba(70,70,70,0.28)';
+                for (let i=0;i<pts.length;i++){
+                    for (let j=i+1;j<pts.length;j++){
+                        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.hypot(dx,dy);
+                        if (d<LINK_DIST){
+                            ctx.globalAlpha = ((LINK_DIST - d) / LINK_DIST) * 0.45;
+                            ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1;
+                ctx.fillStyle='rgba(60,70,65,0.45)';
+                for (const p of pts){ ctx.beginPath(); ctx.arc(p.x,p.y,1.8,0,Math.PI*2); ctx.fill(); }
+
+                if (!prefersReduce) requestAnimationFrame(step);
+            }
+            prefersReduce ? step() : requestAnimationFrame(step);
+        }
+
+        // --- Moth follow (moth mode only; spotlight follows too) ---
+        const moth = /** @type {HTMLElement} */(document.getElementById('moth'));
+        const spot = /** @type {HTMLElement} */(document.getElementById('spotlight'));
+
+        function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+        let mx = innerWidth*0.5, my = innerHeight*0.4, x = mx, y = my, angle = 0;
+
+        function onMove(e){
+            if (prefersReduce) return;
+            mx = clamp(e.clientX, 40, innerWidth-40);
+            my = clamp(e.clientY, 30, innerHeight-30);
+        }
+
+        function mothTick(){
+            const t = performance.now();
+            const wobX = Math.cos(t/500)*8, wobY = Math.sin(t/700)*6;
+            const dx = (mx+wobX) - x, dy = (my+wobY) - y;
+            x += dx*0.08; y += dy*0.08;
+            const targetAngle = Math.atan2(dy, dx) + Math.sin(t/400)*0.18;
+            angle += (targetAngle - angle) * 0.2;
+
+            moth.style.setProperty('--mx', `${x}px`);
+            moth.style.setProperty('--my', `${y}px`);
+            moth.style.setProperty('--ma', `${angle}rad`);
+            spot.style.setProperty('--sx', `${mx}px`);
+            spot.style.setProperty('--sy', `${my}px`);
+
+            if (!prefersReduce) requestAnimationFrame(mothTick);
+        }
+
+        if (MODE === 'moth') {
+            addEventListener('pointermove', onMove, { passive: true });
+            spot.style.opacity = '1'; moth.style.opacity = '0.95';
+            if (!prefersReduce) requestAnimationFrame(mothTick);
+        } else {
+            spot.style.opacity = '0'; moth.style.opacity = '0';
+        }
+
+        // --- Sync the lede copy with chosen mode ---
+        const lede = document.querySelector('.lede');
+        if (lede) {
+            lede.textContent = MODE === 'moth'
+                ? 'You’ve reached a quiet corner. A moth still searches the light.'
+                : 'You’ve reached a quiet corner. The network missed a node.';
+        }
+    </script>
+</Base>

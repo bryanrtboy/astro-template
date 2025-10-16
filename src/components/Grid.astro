@@ -1,0 +1,133 @@
+---
+import type { GalleryItem } from '../lib/types';
+import GalleryCard from './GalleryCard.astro';
+import Lightbox from './Lightbox.astro';
+
+
+// props
+const { items, variant = 'masonry', useLightbox = true, linkToAnchor = false } = Astro.props as {
+    items: GalleryItem[];
+    variant?: 'masonry' | 'uniform';
+    useLightbox?: boolean;
+    linkToAnchor?: boolean;
+};
+
+// helpers
+const isMasonry = variant === 'masonry';
+
+// Choose the *one* LCP index (top-left tile usually).
+// If you ever insert a hero/header above the grid, adjust this to the first visible tile.
+const lcpIndex = 0;
+
+---
+
+<!-- Grid -->
+<div class={`grid ${variant}`} data-grid { ...(isMasonry ? {'data-masonry': true} : {}) }>
+    {items.map((it, i) => (
+            <GalleryCard 
+                    item={it} 
+                    index={i} 
+                    priority={i === lcpIndex}
+                    useLightbox={useLightbox}
+                    linkToAnchor={linkToAnchor}
+            />
+    ))}
+</div>
+
+{useLightbox ? <Lightbox /> : null}
+
+<!-- One lightbox overlay per page -->
+<!--<Lightbox />-->
+
+{isMasonry ? (
+    // Only load the masonry script when variant = masonry
+<script is:inline>
+    (() => {
+        const grid = document.querySelector('[data-masonry]');
+        if (!grid) return;
+
+        const cs   = getComputedStyle(grid);
+        const rowH = parseFloat(cs.getPropertyValue('grid-auto-rows')) || 10;
+        const gap  = parseFloat(cs.getPropertyValue('row-gap')) || 0;
+        const cards = Array.from(grid.querySelectorAll('.card'));
+
+        const getCols = () => {
+            const v = parseInt(getComputedStyle(grid).getPropertyValue('--cols'), 10);
+            return Number.isFinite(v) && v > 0 ? v : 5;
+        };
+        const getColW = () => Math.round(cards[0]?.getBoundingClientRect().width || 240);
+
+        let colW;
+
+        const computeCard = (card) => {
+            const ar = parseFloat(card.getAttribute('data-ar') || '');
+            if (!ar || !isFinite(ar)) return;
+            const h = colW * ar;
+            const span = Math.max(1, Math.ceil((h + gap) / (rowH + gap)));
+            card.style.gridRowEnd = `span ${span}`;
+        };
+
+        // --- EAGER PASS: compute only the first N rows (scale with column count)
+        colW = getColW();
+        const rowsToStabilize = 6;                  // tweak if needed
+        const eagerCount = Math.min(cards.length, getCols() * rowsToStabilize);
+        const hash = location.hash && decodeURIComponent(location.hash.slice(1));
+        
+        if (hash) {
+            const targetIndex = cards.findIndex(c => c.id === hash);
+            const cols = getCols();
+            const padRows = 2;
+            const end = targetIndex >= 0
+                ? Math.min(cards.length, Math.ceil((targetIndex / cols)) * cols + cols * (rowsToStabilize + padRows))
+                : eagerCount;
+            for (let i = 0; i < end; i++) computeCard(cards[i]);
+        } else {
+            for (let i = 0; i < eagerCount; i++) computeCard(cards[i]);
+        }
+
+        const dirty = new Set();
+        let scheduled = false;
+        const MAX_PER_FRAME = 48;
+
+        const schedule = () => {
+            if (scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(() => {
+                scheduled = false;
+                let n = 0;
+                // Measure colW once per frame (accounts for responsive change)
+                colW = getColW();
+                for (const el of dirty) {
+                    computeCard(el);
+                    dirty.delete(el);
+                    if (++n >= MAX_PER_FRAME) { schedule(); break; }
+                }
+            });
+        };
+        const markDirty = (el) => { dirty.add(el); schedule(); };
+
+        const io = new IntersectionObserver((entries) => {
+            for (const e of entries) {
+                if (!e.isIntersecting) continue;
+                markDirty(e.target);
+                io.unobserve(e.target);
+            }
+        }, { rootMargin: '75% 0px' });
+        cards.forEach((c) => io.observe(c));
+
+        // Recompute spans on container resize (not every image resize)
+        const ro = new ResizeObserver(() => {
+            // Only mark near-viewport cards to keep work bounded
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+            for (const c of cards) {
+                const r = c.getBoundingClientRect();
+                if (r.top < vh * 1.25 && r.bottom > -vh * 0.25) markDirty(c);
+            }
+        });
+        ro.observe(grid);
+
+        window.addEventListener('orientationchange', () => { cards.forEach(markDirty); });
+    })();
+</script>
+
+    ) : null}

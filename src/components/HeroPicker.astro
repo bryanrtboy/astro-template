@@ -1,0 +1,242 @@
+---
+import type {GalleryItem} from '../lib/types';
+
+// Props
+const {
+    section = 'installations',
+    mode = 'random',
+    ar = 16 / 9,
+    limit = 24,
+    showCaption = false,
+    captionClass = ''
+} = Astro.props as {
+    section?: string | string[];     // ⬅️ allow multiple
+    mode?: 'static' | 'random' | 'daily';
+    ar?: number;
+    limit?: number;
+    showCaption?: boolean;
+    captionClass?: string;
+};
+
+
+// after you compute `ar`, add a consistent intrinsic box:
+
+// Load section items
+// const mod = await import(`../data/sections/${section}.json`);
+// const items = (mod.default as GalleryItem[]);
+
+// Normalize section(s) -> array of section slugs
+const sections: string[] = Array.isArray(section)
+    ? section
+    : String(section)
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+// Load section items from all sections
+// Keep the section name alongside each item so paths & links work
+const allItems: GalleryItem[] = [];
+for (const sec of sections) {
+    try {
+        const mod = await import(`../data/sections/${sec}.json`);
+        const items = (mod.default as GalleryItem[]).map(it => ({
+            ...it,
+            section: it.section || sec, // ensure section is set
+        }));
+        allItems.push(...items);
+    } catch (e) {
+        // silently skip a missing/invalid section file
+    }
+}
+
+// Build per-section candidate lists, then balanced-merge before limiting
+type Cand = { stem: string; title: string; section: string; year: string };
+
+// Group by section
+const bySection = new Map<string, Cand[]>();
+for (const it of allItems) {
+    if (typeof it.ar === 'number' && it.ar < 0.95) {
+        const sec = it.section!;
+        const stem = (it as any).stemFileSafe ?? encodeURIComponent(it.stem);
+        const cand: Cand = {
+            stem,
+            title: it.title || `${sec} artwork`,
+            section: sec,
+            year: it.year || ''
+        };
+        if (!bySection.has(sec)) bySection.set(sec, []);
+        bySection.get(sec)!.push(cand);
+    }
+}
+
+// Seeded shuffle (stable for "daily", random for "random")
+const seed = mode === 'daily'
+    ? Math.floor(Date.now() / 86400000)
+    : Math.floor(Math.random() * 1e9);
+function mulberry32(a: number) {
+    return function () {
+        let t = (a += 0x6D2B79F5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+const rnd = mulberry32(seed);
+function shuffleInPlace<T>(arr: T[]) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rnd() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+// Shuffle each section list independently
+for (const list of bySection.values()) shuffleInPlace(list);
+
+// Balanced round-robin merge across sections, then apply limit
+const candidates: Cand[] = [];
+if (bySection.size) {
+    let progressed = true;
+    // Keep the iteration order stable: use the user-provided sections array
+    while (candidates.length < limit && progressed) {
+        progressed = false;
+        for (const sec of sections) {
+            const list = bySection.get(sec);
+            if (list && list.length) {
+                candidates.push(list.shift()!);
+                progressed = true;
+                if (candidates.length === limit) break;
+            }
+        }
+    }
+}
+
+// Fallback if none
+if (candidates.length === 0 && allItems.length) {
+    const it = allItems[0]!;
+    candidates.push({
+        stem: (it as any).stemFileSafe ?? encodeURIComponent(it.stem),
+        title: it.title || `${it.section} artwork`,
+        year: it.year || '',
+        section: it.section!
+    });
+}
+
+const first = candidates[0];
+
+
+// srcset helpers (unchanged, but use `first.section`)
+const widths = [720, 960, 1440];
+const set = (c: typeof candidates[number], ext: string) =>
+    widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext} ${w}w`).join(', ');
+
+const sizes = 'calc(min(1200px, 100vw - 2.5rem))';
+const hrefFor = (c: typeof candidates[number]) => `/${c.section}#${c.stem}`;
+const captionId = 'hero-caption';
+
+// Safely encode candidate data
+const encoded = encodeURIComponent(JSON.stringify(candidates));
+
+const intrinsicW = 1440;
+const intrinsicH = Math.round(intrinsicW / ar);
+
+---
+
+<section
+        id="hero-root"
+        class="hero hero--intrinsic"
+        data-candidates={encoded}
+        data-mode={mode}
+        data-show-caption={String(showCaption)}
+        data-caption-class={captionClass}
+>
+    <div class="hero-frame" style={`--hero-ar:${ar}`}>
+        <figure class="hero-figure">
+            <picture>
+                <source id="hero-avif" type="image/avif" srcset={set(first, 'avif')} sizes={sizes}/>
+                <source id="hero-webp" type="image/webp" srcset={set(first, 'webp')} sizes={sizes}/>
+                <img
+                        id="hero-img"
+                        src={`/thumbs/${first.section}/${first.stem}-w960.jpg`}
+                        srcset={set(first, 'jpg')}
+                        sizes={sizes}
+                        alt={first.title}
+                        loading="eager"
+                        fetchpriority="high"
+                        decoding="async"
+                        width={intrinsicW}
+                        height={intrinsicH}
+                        aria-labelledby={showCaption ? "hero-overlay-text" : undefined}
+                />
+            </picture>
+
+            {showCaption ? (
+                /* Linked overlay with caption chip */
+                    <a id="hero-overlay-link" class="hero-overlay has-caption" href={hrefFor(first)}>
+      <span class="hero-chip">
+        <span id="hero-overlay-text">{first.title}</span>
+          {first.year && <span class="hero-year"> {first.year}</span>}
+      </span>
+                    </a>
+            ) : (
+                /* Plain, invisible overlay that ensures consistent layout but no hover effect */
+                    <div class="hero-overlay no-caption" aria-hidden="true"></div>
+            )}
+        </figure>
+
+    </div>
+</section>
+
+{mode !== 'static' && (
+<script is:inline>
+    (() => {
+        const root = document.getElementById('hero-root');
+        if (!root) return;
+
+        let picks = [];
+        try { picks = JSON.parse(decodeURIComponent(root.dataset.candidates || '[]')); }
+        catch (_e) { return; }
+        if (!Array.isArray(picks) || picks.length === 0) return;
+
+        const mode = root.dataset.mode || 'random';
+        const showCaption = root.dataset.showCaption === 'true';
+
+        let idx = 0;
+        if (mode === 'daily') {
+            idx = Math.floor(Math.floor(Date.now() / 86400000) % picks.length);
+        } else {
+            idx = Math.floor(Math.random() * picks.length);
+        }
+
+        const c = picks[idx];
+        const widths = [960, 1440, 1920];
+        const buildSet = (ext) => widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext} ${w}w`).join(', ');
+        const hrefFor = (c) => `/${c.section}#${c.stem}`;
+
+        const avif = document.getElementById('hero-avif');
+        const webp = document.getElementById('hero-webp');
+        const img  = document.getElementById('hero-img');
+
+        if (avif) avif.setAttribute('srcset', buildSet('avif'));
+        if (webp) webp.setAttribute('srcset', buildSet('webp'));
+        if (img) {
+            img.setAttribute('srcset', buildSet('jpg'));
+            img.setAttribute('src', `/thumbs/${c.section}/${c.stem}-w960.jpg`);
+            img.setAttribute('alt', c.title || 'hero image');
+        }
+
+        // Update overlay link + text
+        const textEl = document.getElementById('hero-overlay-text');
+        if (textEl) textEl.textContent = c.title || 'View section';
+
+        if (showCaption) {
+            const linkEl = document.getElementById('hero-overlay-link');
+            if (linkEl) linkEl.setAttribute('href', hrefFor(c));
+        }
+
+
+        // Optional: update year if you render it
+        const yearEl = document.querySelector('.hero-chip .hero-year');
+        if (yearEl) yearEl.textContent = c.year ? ` ${c.year}` : '';
+    })();
+</script>
+
+    )}

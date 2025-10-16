@@ -1,0 +1,15 @@
+---
+const sections = ['about', 'installations', 'paintings', 'prints', 'animation', 'archive'];
+import SearchBox from './SearchBox.astro';
+---
+<header class="site-header">
+    <div class="wrap hstack">
+        <a class="site-title" href="/">YOUR NAME</a>
+        <nav>
+            {sections.map(s => <a class="badge" href={`/${s}`}>{s}</a>)}
+        </nav>
+        <div class="right">
+        <SearchBox />
+            </div>
+    </div>
+</header>

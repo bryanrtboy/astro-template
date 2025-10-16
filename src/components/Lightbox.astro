@@ -1,0 +1,184 @@
+---
+import '../styles/global.css';
+---
+<div class="lightbox" hidden aria-modal="true" role="dialog" aria-label="Image viewer">
+    <div class="lb-backdrop"></div>
+    <div class="lb-header"><button class="lb-close" aria-label="Close (Esc)">✕</button></div>
+    <button class="lb-prev" aria-label="Previous"></button>
+    <div class="lb-stage">
+        <div class="lb-caption">
+            <div class="lb-titleline"><span class="lb-title"></span></div>
+            <div class="lb-meta">
+                <span class="lb-artist"></span><span class="lb-dot" aria-hidden="true"> · </span><span class="lb-year"></span>
+            </div>
+            <div class="lb-cta"></div>
+            <div class="lb-details"></div>
+        </div>
+        <img class="lb-img" alt="" />
+    </div>
+    <button class="lb-next" aria-label="Next"></button>
+</div>
+
+<script is:inline>
+    (() => {
+        const grid = document.querySelector('[data-grid]');
+        const lb   = document.querySelector('.lightbox');
+        if (!grid || !lb) return;
+
+        const body     = document.body;
+        const imgEl    = lb.querySelector('.lb-img');
+        const btnPrev  = lb.querySelector('.lb-prev');
+        const btnNext  = lb.querySelector('.lb-next');
+        const btnClose = lb.querySelector('.lb-close');
+        const backdrop = lb.querySelector('.lb-backdrop');
+        const tEl      = lb.querySelector('.lb-title');
+        const aEl      = lb.querySelector('.lb-artist');
+        const yEl      = lb.querySelector('.lb-year');
+        const dotEl    = lb.querySelector('.lb-dot');
+        const ctaEl    = lb.querySelector('.lb-cta');
+        const detEl    = lb.querySelector('.lb-details');
+
+        const cards = Array.from(grid.querySelectorAll('.card'));
+
+        // widths we actually generated
+        const WIDTHS = [320, 480, 640, 720, 960, 1280, 1440, 1920];
+
+        // pick the nearest width >= target
+        const pickWidth = (target) => {
+            for (const w of WIDTHS) if (w >= target) return w;
+            return WIDTHS[WIDTHS.length - 1];
+        };
+
+        // Build a thumbs URL
+        const thumbUrl = (section, stem, w, ext='avif') =>
+            `/thumbs/${section}/${stem}-w${w}.${ext}`;
+        
+        const data = cards.map((card) => {
+            const i      = parseInt(card.getAttribute('data-index') || '0', 10);
+            const href   = card.getAttribute('href') || '';
+            const title  = card.dataset.title || '';
+            const year   = card.dataset.year || '';
+            const artist = card.dataset.artist || '';
+            const desc   = card.dataset.desc || '';
+            const sale   = (card.dataset.sale || 'PRIVATE').toUpperCase();
+            // 👇 new: where to fetch thumbs from
+            const section = card.dataset.section || '';
+            const stem    = card.dataset.stem || '';
+
+            // If you want to preserve AR to avoid CLS inside the lightbox, you can read it here
+            const ar      = parseFloat(card.dataset.ar || '') || null;
+
+            return { i, href, title, year, artist, desc, sale, section, stem, ar };
+        });
+
+        let idx = 0;
+        let lastFocus = null;
+
+        const preload = (i) => { 
+            const d = data[i];
+            if (!d || !d.section || !d.stem) return;
+            const w = 960; // sensible medium preload for neighbor
+            const n = new Image();
+            n.decoding = 'async';
+            n.loading = 'eager';
+            n.src = thumbUrl(d.section, d.stem, w, 'avif');
+        };
+
+        const renderCTA = ({ title, sale, hasDesc, hrefFull }) => {
+            let primary;
+            if (sale === 'A') {
+                primary = `<a class="lb-link" href="mailto:bryan@bryanleister.com?subject=${encodeURIComponent(`Purchase information for ${title}`)}">price inquiry</a>`;
+            } else if (sale === 'W') {
+                primary = `<a class="lb-link" href="mailto:bwalker@walkerfineart.com?subject=${encodeURIComponent(`Price inquiry for ${title} by Bryan Leister`)}">price on request</a>`;
+            } else {
+                primary = `<span>private collection</span>`;
+            }
+            // Optional “view full resolution” link to original /images file
+            const full = hrefFull ? `<span class="lb-sep" aria-hidden="true"> · </span><a class="lb-link" href="${hrefFull}" target="_blank" rel="noopener">view full-resolution</a>` : '';
+            const details = hasDesc ? `<span class="lb-sep" aria-hidden="true"> · </span><a href="#" class="lb-link lb-details-link">details</a>` : '';
+            return primary + full + details;w
+        };
+
+        const show = (i) => {
+            if (i < 0 || i >= data.length) return;
+            idx = i;
+            const item = data[idx];
+
+            // 👇 CHANGED: compute an appropriate thumb for the current viewport
+            const target = Math.min(
+                Math.round((window.innerWidth || document.documentElement.clientWidth) * (window.devicePixelRatio || 1)),
+                1440 // cap for performance; adjust if you want larger on desktop
+            );
+            const w = pickWidth(target);
+
+            // Prefer AVIF; browser falls back to JPEG if unsupported
+            if (item.section && item.stem) {
+                imgEl.src = thumbUrl(item.section, item.stem, w, 'avif');
+                // Optionally set width/height to keep ratio stable (if you can pass them)
+                // imgEl.width = itemW; imgEl.height = itemH;
+            } else {
+                // Fallback to original href if something’s missing
+                imgEl.src = item.href;
+            }
+            
+            tEl.textContent = item.title;
+            aEl.textContent = item.artist || '';
+            yEl.textContent = item.year || '';
+            dotEl.style.display = (item.artist && item.year) ? '' : 'none';
+            const hasDesc = !!item.desc;
+            ctaEl.innerHTML = renderCTA({ title: item.title, sale: item.sale, hasDesc });
+            detEl.textContent = item.desc || '';
+            detEl.classList.remove('show');
+            lb.classList.remove('details-open');
+            btnPrev.disabled = (idx <= 0);
+            btnNext.disabled = (idx >= data.length - 1);
+            // Nav + neighbor preloads (use thumbs)
+            if (idx + 1 < data.length) preload(idx + 1);
+            if (idx - 1 >= 0) preload(idx - 1);
+        };
+
+        const open = (i) => { lastFocus = document.activeElement; lb.hidden = false; body.classList.add('no-scroll'); show(i); (btnClose || lb).focus(); };
+        const close = () => { lb.hidden = true; body.classList.remove('no-scroll'); lastFocus?.focus?.(); };
+        const next  = () => { if (idx < data.length - 1) show(idx + 1); };
+        const prev  = () => { if (idx > 0) show(idx - 1); };
+
+        grid.addEventListener('click', (e) => {
+            const a = e.target && e.target.closest ? e.target.closest('.card') : null;
+            if (!a) return;
+            e.preventDefault();
+            const i = parseInt(a.getAttribute('data-index') || '0', 10);
+            open(i);
+        });
+
+        grid.addEventListener('touchend', (e) => {
+            const a = e.target && e.target.closest ? e.target.closest('.card') : null;
+            if (!a) return;
+            if (a.classList.contains('reveal')) {
+                e.preventDefault();
+                const i = parseInt(a.getAttribute('data-index') || '0', 10);
+                open(i);
+            }
+        }, { passive: false });
+
+        btnClose.addEventListener('click', close);
+        btnNext.addEventListener('click', next);
+        btnPrev.addEventListener('click', prev);
+        backdrop.addEventListener('click', close);
+
+        ctaEl.addEventListener('click', (e) => {
+            const link = e.target && e.target.closest ? e.target.closest('.lb-details-link') : null;
+            if (!link) return;
+            e.preventDefault();
+            const showing = detEl.classList.toggle('show');
+            lb.classList.toggle('details-open', showing);
+            link.textContent = showing ? 'hide details' : 'details';
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (lb.hidden) return;
+            if (e.key === 'Escape') close();
+            else if (e.key === 'ArrowRight') next();
+            else if (e.key === 'ArrowLeft')  prev();
+        });
+    })();
+</script>

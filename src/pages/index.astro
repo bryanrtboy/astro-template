@@ -1,0 +1,21 @@
+---
+import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Grid from '../components/Grid.astro';
+
+import recent from '../data/recent.json';
+import HeroPicker from '../components/HeroPicker.astro';
+---
+
+<Base
+        title="YOUR NAME - subititle"
+        description="Recent artworks by the artist."
+>
+    <SiteHeader/>
+    <div class="wrap">
+        <HeroPicker section={['installations','paintings', 'prints']} mode="random" showCaption={true}/>
+        <h3>Recent Work</h3>
+        <Grid items={recent} useLightbox={false} linkToAnchor={true} />
+    </div>
+</Base>

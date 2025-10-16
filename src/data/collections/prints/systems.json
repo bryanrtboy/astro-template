@@ -1,0 +1,99 @@
+{
+  "section": "prints",
+  "slug": "systems",
+  "title": "systems",
+  "items": [
+    {
+      "section": "prints",
+      "src": "/images/prints/2019-09-30-Saguaro-Sky.2_W.jpg",
+      "href": "/images/prints/2019-09-30-Saguaro-Sky.2_W.jpg",
+      "stem": "2019-09-30-Saguaro-Sky.2_W",
+      "base": "2019-09-30-Saguaro-Sky.2_W.jpg",
+      "ext": ".jpg",
+      "title": "Saguaro Sky.2",
+      "year": "2019",
+      "slug": "2019-09-30-saguaro-sky-2-w",
+      "width": 1080,
+      "height": 1920,
+      "ar": 1.777778,
+      "rows": 43,
+      "dateKey": "2019-09-30",
+      "exif": {
+        "artist": "Bryan Leister | 16\" X 28\" | dye sublimation print on aluminum | systems prints",
+        "description": "Systems is a series exploring shape, color and motion realized through programming and experiments with how computers draw shapes to the screen. I was inspired by the simple geometry of diatoms and the layered colors of southern New Mexico and Arizona. Diatoms are living organisms and are found nearly everywhere, creating almost half of the oxygen that we breathe, but their unique forms feel very mechanical to me, like little machines. I’m really interested in the boundary between natural, living things and how digital code can be used to create things that feel very much alive. The projected image is not a pre-recorded video, but an evolving landscape created through code, algorithms and latent artifacts rendering to the screen. In this way, I hope to evoke reflections on the hidden beauty found in geometry, code and nature.",
+        "copyright": "All rights reserved, no use is permitted  without written authorization from Bryan Leister",
+        "keywords": []
+      },
+      "sale": "W"
+    },
+    {
+      "section": "prints",
+      "src": "/images/prints/2019-09-30-Saguaro-Sky.1_W.jpg",
+      "href": "/images/prints/2019-09-30-Saguaro-Sky.1_W.jpg",
+      "stem": "2019-09-30-Saguaro-Sky.1_W",
+      "base": "2019-09-30-Saguaro-Sky.1_W.jpg",
+      "ext": ".jpg",
+      "title": "Saguaro Sky.1",
+      "year": "2019",
+      "slug": "2019-09-30-saguaro-sky-1-w",
+      "width": 1080,
+      "height": 1920,
+      "ar": 1.777778,
+      "rows": 43,
+      "dateKey": "2019-09-30",
+      "exif": {
+        "artist": "Bryan Leister | 16\" X 28\" | dye sublimation print on aluminum | systems prints",
+        "description": "Systems is a series exploring shape, color and motion realized through programming and experiments with how computers draw shapes to the screen. I was inspired by the simple geometry of diatoms and the layered colors of southern New Mexico and Arizona. Diatoms are living organisms and are found nearly everywhere, creating almost half of the oxygen that we breathe, but their unique forms feel very mechanical to me, like little machines. I’m really interested in the boundary between natural, living things and how digital code can be used to create things that feel very much alive. The projected image is not a pre-recorded video, but an evolving landscape created through code, algorithms and latent artifacts rendering to the screen. In this way, I hope to evoke reflections on the hidden beauty found in geometry, code and nature.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "W"
+    },
+    {
+      "section": "prints",
+      "src": "/images/prints/2019-09-30-Lavender-Mine.3_W.jpg",
+      "href": "/images/prints/2019-09-30-Lavender-Mine.3_W.jpg",
+      "stem": "2019-09-30-Lavender-Mine.3_W",
+      "base": "2019-09-30-Lavender-Mine.3_W.jpg",
+      "ext": ".jpg",
+      "title": "Lavender Mine.3",
+      "year": "2019",
+      "slug": "2019-09-30-lavender-mine-3-w",
+      "width": 1080,
+      "height": 1920,
+      "ar": 1.777778,
+      "rows": 43,
+      "dateKey": "2019-09-30",
+      "exif": {
+        "artist": "Bryan Leister | 16\" X 28\" | dye sublimation print on aluminum | systems prints",
+        "description": "Systems is a series exploring shape, color and motion realized through programming and experiments with how computers draw shapes to the screen. I was inspired by the simple geometry of diatoms and the layered colors of southern New Mexico and Arizona. Diatoms are living organisms and are found nearly everywhere, creating almost half of the oxygen that we breathe, but their unique forms feel very mechanical to me, like little machines. I’m really interested in the boundary between natural, living things and how digital code can be used to create things that feel very much alive. The projected image is not a pre-recorded video, but an evolving landscape created through code, algorithms and latent artifacts rendering to the screen. In this way, I hope to evoke reflections on the hidden beauty found in geometry, code and nature.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "W"
+    },
+    {
+      "section": "prints",
+      "src": "/images/prints/2019-09-30-Lavender-Mine.2_W.jpg",
+      "href": "/images/prints/2019-09-30-Lavender-Mine.2_W.jpg",
+      "stem": "2019-09-30-Lavender-Mine.2_W",
+      "base": "2019-09-30-Lavender-Mine.2_W.jpg",
+      "ext": ".jpg",
+      "title": "Lavender Mine.2",
+      "year": "2019",
+      "slug": "2019-09-30-lavender-mine-2-w",
+      "width": 1080,
+      "height": 1920,
+      "ar": 1.777778,
+      "rows": 43,
+      "dateKey": "2019-09-30",
+      "exif": {
+        "artist": "Bryan Leister | 16\" X 28\" | dye sublimation print on aluminum | systems prints",
+        "description": "Systems is a series exploring shape, color and motion realized through programming and experiments with how computers draw shapes to the screen. I was inspired by the simple geometry of diatoms and the layered colors of southern New Mexico and Arizona. Diatoms are living organisms and are found nearly everywhere, creating almost half of the oxygen that we breathe, but their unique forms feel very mechanical to me, like little machines. I’m really interested in the boundary between natural, living things and how digital code can be used to create things that feel very much alive. The projected image is not a pre-recorded video, but an evolving landscape created through code, algorithms and latent artifacts rendering to the screen. In this way, I hope to evoke reflections on the hidden beauty found in geometry, code and nature.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "W"
+    }
+  ]
+}

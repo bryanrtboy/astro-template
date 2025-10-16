@@ -1,0 +1,39 @@
+---
+import meta from '../data/thumbs/site/_meta.json';
+
+const { name = 'profile', alt = 'Portrait', priority = true } = Astro.props;
+
+// Keep in sync with gen-thumbs widths
+const widths = [360, 480, 720, 960, 1200, 1440, 1920];
+const set = (ext: string) => widths.map(w => `/thumbs/site/${name}-w${w}.${ext} ${w}w`).join(', ');
+
+// Typical content width for an About page; tweak if your layout differs
+const sizes = [
+    '(max-width: 600px) 100vw',
+    '(max-width: 1024px) 70vw',
+    '800px'
+].join(', ');
+
+// meta is an object like { "<stem>": { width, height }, … }
+const dims = (meta as Record<string, { width?: number; height?: number }>)[name] ?? {};
+const w = dims.width  ?? 1200;
+const h = dims.height ?? 1600;
+
+const fallbackSrc = `/thumbs/site/${name}-w480.jpg`;
+---
+<picture>
+    <source type="image/avif" srcset={set('avif')} sizes={sizes} />
+    <source type="image/webp" srcset={set('webp')} sizes={sizes} />
+    <img
+            src={fallbackSrc}
+            srcset={set('jpg')}
+            sizes={sizes}
+            alt={alt}
+            width={w}
+            height={h}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : 'auto'}
+            decoding="async"
+    />
+</picture>
+

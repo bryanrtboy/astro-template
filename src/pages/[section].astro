@@ -1,0 +1,98 @@
+---
+/* src/pages/[section].astro */
+import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Grid from '../components/Grid.astro';
+import {SECTIONS} from '../lib/sections.js';
+import type {GalleryItem} from '../lib/types';
+import { getEntry, getCollection } from 'astro:content';
+
+
+
+// ✅ Only emit paths for sections that have ../data/sections/<section>.json
+export async function getStaticPaths() {
+    // list the JSON files that exist at build time (no loading)
+    const mods = import.meta.glob('../data/sections/*.json');
+    const available = new Set(
+        Object.keys(mods)
+            .map((p) => p.split('/').pop()!)      // "<section>.json"
+            .map((f) => f.replace(/\.json$/, '')) // "<section>"
+    );
+
+    return SECTIONS
+        .filter((s) => available.has(s))
+        .map((section) => ({ params: { section } }));
+}
+const {section} = Astro.params;
+if (!SECTIONS.includes(section)) {
+    throw new Error(`Invalid section: ${section}`);
+}
+
+// Load section items
+const modules = import.meta.glob<{ default: GalleryItem[] }>(
+    '../data/sections/*.json',
+    {eager: true}
+);
+const key = `../data/sections/${section}.json` as const;
+const items: GalleryItem[] = modules[key]?.default ?? [];
+
+// ---------- Sub-collection links (for current section, if any) ----------
+type CollLink = { section: string; slug: string; title: string; count: number };
+let collLinks: CollLink[] = [];
+
+try {
+    const idxMod = await import('../data/collections/index.json');
+    const idx = (idxMod.default ?? []) as CollLink[];
+    collLinks = idx.filter((c) => c.section === section);
+} catch {
+    collLinks = [];
+}
+
+const isArchive = section === 'archive';
+
+// ---------- Optional section markdown ----------
+let SectionCopy: any = null;
+
+// Only call getEntry if this slug exists in the 'sections' collection
+const sectionEntries = await getCollection('sections'); // looks in src/content/sections/*
+const hasSectionMd = sectionEntries.some(e => e.slug === section);
+
+if (hasSectionMd) {
+    const entry = await getEntry('sections', section);
+    if (entry) {
+        const { Content } = await entry.render();
+        SectionCopy = Content;
+    }
+}
+
+
+const description = `Explore ${items.length} ${section} by Bryan Leister — a collection of digital and traditional artworks.`;
+
+---
+<Base title={`YOUR NAME – ${section}`} description={description}>
+    <SiteHeader/>
+    <div class="wrap">
+        <h1 style="text-transform:capitalize">{section.replace('-', ' ')}</h1>
+
+        {collLinks.length > 0 ? (
+                <div class="hstack" style="margin-bottom:.75rem;">
+                    {collLinks.map((c) => (
+                            <a class="badge" href={`/${c.section}/${c.slug}`}>
+                                {c.title}{c.count ? ` (${c.count})` : ''}
+                            </a>
+                    ))}
+                </div>
+        ) : null}
+
+        {SectionCopy ?
+                <article class="section-copy">
+                    <SectionCopy/>
+                </article> : null}
+
+        {/* 👇 Skip the grid for 'applications' */}
+        {section !== 'applications' ?
+                <Grid items={items} variant={isArchive ? 'uniform' : 'masonry'} /> : null}
+    </div>
+</Base>
+

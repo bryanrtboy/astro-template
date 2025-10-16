@@ -1,0 +1,59 @@
+---
+const { currentQuery = '' } = Astro.props;
+---
+
+<form action="/search" method="get" role="search" class="searchbox" novalidate>
+    <input
+            type="search"
+            name="q"
+            placeholder="Search…"
+            value={currentQuery}
+            aria-label="Search site"
+            class="search-input"
+    />
+    <button type="button" class="icon-btn" aria-label="Search" id="searchToggle">
+        <svg width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="1.75"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M17 17 L21 21" />
+        </svg>
+    </button>
+</form>
+
+<script is:inline>
+    // keep open if query exists on load (works with SPA navs too)
+    const initSearchBox = () => {
+        const form  = document.querySelector('.searchbox');
+        const input = form?.querySelector('.search-input');
+        if (!form || !input) return;
+
+        const params = new URLSearchParams(location.search);
+        const q = params.get('q') || '';
+        if (q) { form.classList.add('active'); input.value = q; }
+
+        // toggle on icon click; if already open and value present, submit
+        const btn = document.getElementById('searchToggle');
+        btn?.addEventListener('click', (e) => {
+            e.preventDefault(); // never trigger native validation
+            if (!form.classList.contains('active')) {
+                form.classList.add('active');
+                input.focus();
+            } else if (input.value.trim()) {
+                form.submit();
+            } else {
+                input.focus();
+            }
+        });
+
+        // click-outside closes only if empty
+        document.addEventListener('click', (e) => {
+            if (!form.contains(e.target) && !input.value.trim()) {
+                form.classList.remove('active');
+            }
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', initSearchBox);
+    document.addEventListener('astro:page-load', initSearchBox);
+</script>

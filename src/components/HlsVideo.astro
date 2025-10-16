@@ -1,0 +1,107 @@
+---
+const {
+    src,
+    poster = null,
+    aspectRatio = '16/9',
+    width = '100%',
+    id = 'hls-' + Math.random().toString(36).slice(2),
+} = Astro.props;
+---
+
+<video
+        id={id}
+        data-hls-src={src}
+        controls
+        playsinline
+        preload="none"                    
+        crossorigin="anonymous"
+        poster={poster}
+        style={`width:${width};aspect-ratio:${aspectRatio};display:block;margin:10px auto;`}
+/>
+
+<script is:inline>
+    (() => {
+        const el  = document.currentScript.previousElementSibling;
+        const SRC = el?.getAttribute('data-hls-src');
+
+        function log(prefix, d){ try { console.error(prefix, d); } catch {} }
+
+        // Load hls.js once (use your working singleton)
+        function loadHlsOnce(){
+            if (window.Hls) return Promise.resolve();
+            if (window.__hlsjsLoading instanceof Promise) return window.__hlsjsLoading;
+
+            const existing = document.getElementById('hlsjs-cdn');
+            if (existing) {
+                window.__hlsjsLoading = new Promise((res, rej) => {
+                    existing.addEventListener('load', res, { once: true });
+                    existing.addEventListener('error', rej, { once: true });
+                });
+                return window.__hlsjsLoading;
+            }
+
+            window.__hlsjsLoading = new Promise((res, rej) => {
+                const s = document.createElement('script');
+                s.id  = 'hlsjs-cdn';
+                s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js';
+                s.onload  = () => res();
+                s.onerror = (e) => { log('Failed to load hls.js', e); rej(e); };
+                document.head.appendChild(s);
+            });
+            return window.__hlsjsLoading;
+        }
+
+        let initialized = false;
+        let hls;
+
+        async function setupWhenVisible() {
+            if (initialized || !el || !SRC) return;
+            initialized = true;
+
+            // Safari: delay setting src until in view (preload="none" respected)
+            if (el.canPlayType('application/vnd.apple.mpegurl')) {
+                el.src = SRC;
+                el.addEventListener('error', e => log('VIDEO tag error (native HLS):', e));
+                return;
+            }
+
+            try {
+                await loadHlsOnce();
+                if (window.Hls && window.Hls.isSupported()) {
+                    // Don't start fetching segments until user hits play
+                    hls = new Hls({
+                        maxBufferLength: 30,
+                        autoStartLoad: false,
+                    });
+                    hls.on(Hls.Events.ERROR, (_evt, data) => log('hls.js error:', data));
+                    hls.loadSource(SRC);
+                    hls.attachMedia(el);
+
+                    // Start network only on play (user intent)
+                    const start = () => {
+                        try { hls.startLoad(0); } catch {}
+                        el.removeEventListener('play', start);
+                    };
+                    el.addEventListener('play', start);
+                }
+            } catch (e) {
+                log('Lazy hls.js load failed', e);
+                // Optional: MP4 fallback on failure
+                // el.src = SRC.replace('master.m3u8', '720p.mp4');
+            }
+        }
+
+        // Lazy-init via IntersectionObserver
+        const io = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) {
+                    io.unobserve(el);
+                    setupWhenVisible();
+                    break;
+                }
+            }
+        }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
+
+        if (el) io.observe(el);
+    })();
+</script>

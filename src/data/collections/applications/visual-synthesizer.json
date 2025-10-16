@@ -1,0 +1,145 @@
+{
+  "section": "applications",
+  "slug": "visual-synthesizer",
+  "title": "Visual Synthesizer",
+  "items": [
+    {
+      "section": "applications",
+      "src": "/images/applications/2012-07-07-visual-synth-installation.jpg",
+      "href": "/images/applications/2012-07-07-visual-synth-installation.jpg",
+      "stem": "2012-07-07-visual-synth-installation",
+      "base": "2012-07-07-visual-synth-installation.jpg",
+      "ext": ".jpg",
+      "title": "visual synth installation",
+      "year": "2012",
+      "slug": "2012-07-07-visual-synth-installation",
+      "width": 2400,
+      "height": 1800,
+      "ar": 0.75,
+      "rows": 18,
+      "dateKey": "2012-07-07",
+      "exif": {
+        "artist": "Bryan Leister | code | Visual Synthesizer installation",
+        "description": "Installation at Taxi in Denver, using a Kinect for input",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "applications",
+      "src": "/images/applications/2012-07-07-screenshot-5.jpg",
+      "href": "/images/applications/2012-07-07-screenshot-5.jpg",
+      "stem": "2012-07-07-screenshot-5",
+      "base": "2012-07-07-screenshot-5.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2012",
+      "slug": "2012-07-07-screenshot-5",
+      "width": 2400,
+      "height": 1109,
+      "ar": 0.462083,
+      "rows": 12,
+      "dateKey": "2012-07-07",
+      "exif": {
+        "artist": "Bryan Leister | code | Visual Synthesizer for iOS and Android",
+        "description": "Screenshots of the visual synthesizer",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "applications",
+      "src": "/images/applications/2012-07-07-screenshot-4.jpg",
+      "href": "/images/applications/2012-07-07-screenshot-4.jpg",
+      "stem": "2012-07-07-screenshot-4",
+      "base": "2012-07-07-screenshot-4.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2012",
+      "slug": "2012-07-07-screenshot-4",
+      "width": 2400,
+      "height": 1109,
+      "ar": 0.462083,
+      "rows": 12,
+      "dateKey": "2012-07-07",
+      "exif": {
+        "artist": "Bryan Leister | code | Visual Synthesizer for iOS and Android",
+        "description": "Screenshots of the visual synthesizer",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "applications",
+      "src": "/images/applications/2012-07-07-screenshot-3.jpg",
+      "href": "/images/applications/2012-07-07-screenshot-3.jpg",
+      "stem": "2012-07-07-screenshot-3",
+      "base": "2012-07-07-screenshot-3.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2012",
+      "slug": "2012-07-07-screenshot-3",
+      "width": 2400,
+      "height": 1109,
+      "ar": 0.462083,
+      "rows": 12,
+      "dateKey": "2012-07-07",
+      "exif": {
+        "artist": "Bryan Leister | code | Visual Synthesizer for iOS and Android",
+        "description": "Screenshots of the visual synthesizer",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "applications",
+      "src": "/images/applications/2012-07-07-screenshot-2.jpg",
+      "href": "/images/applications/2012-07-07-screenshot-2.jpg",
+      "stem": "2012-07-07-screenshot-2",
+      "base": "2012-07-07-screenshot-2.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2012",
+      "slug": "2012-07-07-screenshot-2",
+      "width": 2400,
+      "height": 1109,
+      "ar": 0.462083,
+      "rows": 12,
+      "dateKey": "2012-07-07",
+      "exif": {
+        "artist": "Bryan Leister | code | Visual Synthesizer for iOS and Android",
+        "description": "Screenshots of the visual synthesizer",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "applications",
+      "src": "/images/applications/2012-07-07-screenshot-1.jpg",
+      "href": "/images/applications/2012-07-07-screenshot-1.jpg",
+      "stem": "2012-07-07-screenshot-1",
+      "base": "2012-07-07-screenshot-1.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2012",
+      "slug": "2012-07-07-screenshot-1",
+      "width": 2400,
+      "height": 1109,
+      "ar": 0.462083,
+      "rows": 12,
+      "dateKey": "2012-07-07",
+      "exif": {
+        "artist": "Bryan Leister | code | Visual Synthesizer for iOS and Android",
+        "description": "Screenshots of the visual synthesizer",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    }
+  ]
+}

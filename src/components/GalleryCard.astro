@@ -1,0 +1,56 @@
+---
+import type { GalleryItem } from '../lib/types';
+import GalleryImage from './GalleryImage.astro';
+
+// Accept optional `priority` for LCP (pass true for the first couple images if desired)
+const { item, index, priority = false, useLightbox = true, linkToAnchor = false,  } = Astro.props as {
+    item: GalleryItem;
+    index: number;
+    priority?: boolean;
+    useLightbox?: boolean;
+    linkToAnchor?: boolean;
+};
+
+const artist = item.exif?.artist ?? '';
+const desc   = item.exif?.description ?? '';
+//const stemSafe = (item as any).stemFileSafe ?? encodeURIComponent(item.stem);
+const stemSafe = item.stem;
+const anchor   = `/${item.section}#${stemSafe}`;
+//const stemSafe = (item as any).stemFileSafe ?? encodeURIComponent(item.stem);
+
+// If no lightbox, link to the section page + anchor
+const anchorHref = `/${item.section}#${stemSafe}`;
+//const hrefTarget = useLightbox ? (item.href ?? item.src) : anchorHref;
+const hrefTarget = linkToAnchor ? anchor : (item.href ?? item.src);
+
+
+const initialSpan = Math.max(1, item.rows ?? 1); // fallback if rows missing
+
+const ar = item.ar ?? null; // height/width from manifest
+---
+<a
+        id={stemSafe}
+        class="card"
+        style={`grid-row-end: span ${initialSpan}; --ar:${item.ar ?? 0.75};`}
+        data-index={index}
+        data-ar={ar ?? ''}
+        href={hrefTarget}
+        rel="noopener"
+        data-title={item.title}
+        data-year={item.year ?? ''}
+        data-artist={artist}
+        data-desc={desc}
+        data-sale={item.sale ?? 'PRIVATE'}
+        data-section={item.section}          
+        data-stem={stemSafe}                 
+>
+    <GalleryImage item={item} priority={priority} />
+
+    <div class="overlay" aria-hidden="true">
+        <div>
+            <div class="title">{item.title}</div>
+            {item.year ? <div class="sub">{item.year}</div> : null}
+        </div>
+    </div>
+</a>
+

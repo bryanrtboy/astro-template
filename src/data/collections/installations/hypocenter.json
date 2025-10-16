@@ -1,0 +1,122 @@
+{
+  "section": "installations",
+  "slug": "hypocenter",
+  "title": "hypocenter",
+  "items": [
+    {
+      "section": "installations",
+      "src": "/images/installations/2008-04-05-screenshot-5.jpg",
+      "href": "/images/installations/2008-04-05-screenshot-5.jpg",
+      "stem": "2008-04-05-screenshot-5",
+      "base": "2008-04-05-screenshot-5.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2008",
+      "slug": "2008-04-05-screenshot-5",
+      "width": 2400,
+      "height": 1500,
+      "ar": 0.625,
+      "rows": 15,
+      "dateKey": "2008-04-05",
+      "exif": {
+        "artist": "Bryan Leister | variable dimensions | interactive video | hypocenter",
+        "description": "Screenshot showing the tweets that have been spawned as origami swans. Each swan carries the profile of a person who has expressed 'hope' in their tweet within the last few minutes.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "installations",
+      "src": "/images/installations/2008-04-05-screenshot-4.jpg",
+      "href": "/images/installations/2008-04-05-screenshot-4.jpg",
+      "stem": "2008-04-05-screenshot-4",
+      "base": "2008-04-05-screenshot-4.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2008",
+      "slug": "2008-04-05-screenshot-4",
+      "width": 2400,
+      "height": 1500,
+      "ar": 0.625,
+      "rows": 15,
+      "dateKey": "2008-04-05",
+      "exif": {
+        "artist": "Bryan Leister | variable dimensions | interactive video | hypocenter",
+        "description": "Screenshot showing the tweets that have been spawned as origami swans. Each swan carries the profile of a person who has expressed 'hope' in their tweet within the last few minutes.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "installations",
+      "src": "/images/installations/2008-04-05-screenshot-3.jpg",
+      "href": "/images/installations/2008-04-05-screenshot-3.jpg",
+      "stem": "2008-04-05-screenshot-3",
+      "base": "2008-04-05-screenshot-3.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2008",
+      "slug": "2008-04-05-screenshot-3",
+      "width": 2400,
+      "height": 1500,
+      "ar": 0.625,
+      "rows": 15,
+      "dateKey": "2008-04-05",
+      "exif": {
+        "artist": "Bryan Leister | variable dimensions | interactive video | hypocenter",
+        "description": "Screenshot showing the tweets that have been spawned as origami swans. Each swan carries the profile of a person who has expressed 'hope' in their tweet within the last few minutes.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "installations",
+      "src": "/images/installations/2008-04-05-screenshot-2.jpg",
+      "href": "/images/installations/2008-04-05-screenshot-2.jpg",
+      "stem": "2008-04-05-screenshot-2",
+      "base": "2008-04-05-screenshot-2.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2008",
+      "slug": "2008-04-05-screenshot-2",
+      "width": 2400,
+      "height": 1500,
+      "ar": 0.625,
+      "rows": 15,
+      "dateKey": "2008-04-05",
+      "exif": {
+        "artist": "Bryan Leister | variable dimensions | interactive video | hypocenter",
+        "description": "Screenshot showing the tweets that have been spawned as origami swans. Each swan carries the profile of a person who has expressed 'hope' in their tweet within the last few minutes.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    },
+    {
+      "section": "installations",
+      "src": "/images/installations/2008-04-05-screenshot-1.jpg",
+      "href": "/images/installations/2008-04-05-screenshot-1.jpg",
+      "stem": "2008-04-05-screenshot-1",
+      "base": "2008-04-05-screenshot-1.jpg",
+      "ext": ".jpg",
+      "title": "screenshot",
+      "year": "2008",
+      "slug": "2008-04-05-screenshot-1",
+      "width": 2400,
+      "height": 1500,
+      "ar": 0.625,
+      "rows": 15,
+      "dateKey": "2008-04-05",
+      "exif": {
+        "artist": "Bryan Leister | variable dimensions | interactive video | hypocenter",
+        "description": "Screenshot showing the tweets that have been spawned as origami swans. Each swan carries the profile of a person who has expressed 'hope' in their tweet within the last few minutes.",
+        "copyright": "Bryan Leister",
+        "keywords": []
+      },
+      "sale": "PRIVATE"
+    }
+  ]
+}

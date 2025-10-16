@@ -1,0 +1,75 @@
+[
+  {
+    "section": "paintings",
+    "src": "/images/paintings/2025-08-20-ten-mile-(seam)_W.jpg",
+    "href": "/images/paintings/2025-08-20-ten-mile-(seam)_W.jpg",
+    "stem": "2025-08-20-ten-mile-(seam)_W",
+    "base": "2025-08-20-ten-mile-(seam)_W.jpg",
+    "ext": ".jpg",
+    "title": "ten mile (seam)",
+    "year": "2025",
+    "slug": "2025-08-20-ten-mile-seam-w",
+    "width": 2400,
+    "height": 1190,
+    "ar": 0.495833,
+    "rows": 12,
+    "dateKey": "2025-08-20",
+    "exif": {
+      "artist": "Bryan Leister | oil on canvas",
+      "description": "inspired by  the ten mile range in Colorado",
+      "copyright": "Bryan Leister",
+      "keywords": [
+        "landscape"
+      ]
+    },
+    "sale": "W"
+  },
+  {
+    "section": "paintings",
+    "src": "/images/paintings/2024-10-05-random-seed-66663333-(a-peony-surrounded-by-grey-and-black-butterflies)_W.jpg",
+    "href": "/images/paintings/2024-10-05-random-seed-66663333-(a-peony-surrounded-by-grey-and-black-butterflies)_W.jpg",
+    "stem": "2024-10-05-random-seed-66663333-(a-peony-surrounded-by-grey-and-black-butterflies)_W",
+    "base": "2024-10-05-random-seed-66663333-(a-peony-surrounded-by-grey-and-black-butterflies)_W.jpg",
+    "ext": ".jpg",
+    "title": "random seed 66663333 (a peony surrounded by grey and black butterflies)",
+    "year": "2024",
+    "slug": "2024-10-05-random-seed-66663333-a-peony-surrounded-by-grey-and-black-butterflies-w",
+    "width": 1375,
+    "height": 1920,
+    "ar": 1.396364,
+    "rows": 34,
+    "dateKey": "2024-10-05",
+    "exif": {
+      "artist": "Bryan Leister | oil on panel | 30\" X 21.5\"",
+      "description": "An identical prompt was given to ask AI to make a pencil drawing, variations in the seed values and size created each variation. I then painted these by hand using the drawings as a reference.",
+      "copyright": "Bryan Leister",
+      "keywords": []
+    },
+    "sale": "W"
+  },
+  {
+    "section": "paintings",
+    "src": "/images/paintings/1984-01-01-Michaelangelos-The-Libyan-Sibyl_A_5.jpg",
+    "href": "/images/paintings/1984-01-01-Michaelangelos-The-Libyan-Sibyl_A_5.jpg",
+    "stem": "1984-01-01-Michaelangelos-The-Libyan-Sibyl_A_5",
+    "base": "1984-01-01-Michaelangelos-The-Libyan-Sibyl_A_5.jpg",
+    "ext": ".jpg",
+    "title": "Michaelangelos The Libyan Sibyl",
+    "year": "1984",
+    "slug": "1984-01-01-michaelangelos-the-libyan-sibyl-a-5",
+    "width": 2324,
+    "height": 1920,
+    "ar": 0.826162,
+    "rows": 20,
+    "dateKey": "1984-01-01",
+    "exif": {
+      "artist": "Bryan Leister | 16\" X 13\" | fresco on brick",
+      "description": "A fresco created for a class duplicating the techniques of the old master, ground pigment mixed with water and painted onto wet plaster. This is a detail from the Sistine Chapel frescos by Michaelangelo",
+      "copyright": "Bryan Leister",
+      "keywords": [
+        "portrait"
+      ]
+    },
+    "sale": "A"
+  }
+]

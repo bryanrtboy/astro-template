@@ -1,0 +1,23 @@
+{
+  "name": "astro-site-design",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "sync:images": "bash scripts/sync-images.sh",
+    "gen:thumbs": "node scripts/gen-thumbs.mjs",
+    "gen:manifest": "node scripts/build-manifest.mjs",
+    "prep": "npm run sync:images && npm run gen:thumbs && npm run gen:manifest",
+    "dev": "npm run prep && astro dev",
+    "build": "npm run prep && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.6",
+    "@astrojs/sitemap": "^3.6.0",
+    "astro": "^5.14.1",
+    "exifr": "^7.1.3",
+    "fast-glob": "^3.3.3",
+    "fuse.js": "^7.1.0",
+    "sharp": "^0.34.4"
+  }
+}
