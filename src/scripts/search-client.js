@@ -1,5 +1,4 @@
-// @ts-nocheck
-// src/scripts/search-client.ts
+// src/scripts/search-client.js
 import Fuse from 'fuse.js';
 
 (async () => {
@@ -8,16 +7,16 @@ import Fuse from 'fuse.js';
     const per  = Math.max(1, Math.min(96, Number(qs.get('per') || '48')));
     let page   = Math.max(1, Number(qs.get('page') || '1'));
 
-    const metaEl   = document.getElementById('search-meta') as HTMLParagraphElement;
-    const pagesSec = document.getElementById('results-pages') as HTMLElement;          
-    const pagesUl  = pagesSec.querySelector<HTMLUListElement>('.page-list')!;         
-    const imgsSec  = document.getElementById('results-images') as HTMLElement;           
-    const gridEl   = document.getElementById('image-grid') as HTMLElement;               
-    const pager    = imgsSec.querySelector<HTMLElement>('.pager')!;          
-    const prevBtn  = document.getElementById('prevPage') as HTMLAnchorElement;           
-    const nextBtn  = document.getElementById('nextPage') as HTMLAnchorElement;          
-    const pageInfo = document.getElementById('pageInfo') as HTMLSpanElement;            
-    const emptyEl  = document.getElementById('empty-state') as HTMLParagraphElement;     
+    const metaEl   = document.getElementById('search-meta');
+    const pagesSec = document.getElementById('results-pages');          
+    const pagesUl       = pagesSec.querySelector('.page-list');         
+    const imgsSec  = document.getElementById('results-images');           
+    const gridEl   = document.getElementById('image-grid');               
+    const pager         = imgsSec.querySelector('.pager');          
+    const prevBtn  = document.getElementById('prevPage');           
+    const nextBtn  = document.getElementById('nextPage');          
+    const pageInfo = document.getElementById('pageInfo');            
+    const emptyEl  = document.getElementById('empty-state');     
     
 document.title = q ? `Search: ${q}` : 'Search results';
 

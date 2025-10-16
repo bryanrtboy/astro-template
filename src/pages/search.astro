@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
-import searchClientUrl from '../scripts/search-client.ts?url';
+import SearchClientLoader from '../components/SearchClientLoader.astro';
 
 // You can read q here, but on a fully static site it won't change per request.
 // (We still keep it so the title/SEO are reasonable in dev.)
@@ -43,7 +43,7 @@ export const prerender = true;
     </div>
 
     <!-- at the bottom of pages/search.astro -->
-    <script type="module" src={searchClientUrl}></script>
 
+    <SearchClientLoader />
 
 </Base>
