@@ -1,5 +1,6 @@
 ---
 import '../../styles/global.css';
+import site from '../../data/site.json';
 import Base from '../../layouts/Base.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import Grid from '../../components/Grid.astro';
@@ -35,7 +36,7 @@ let description = '';
 if (items.length > 0) {
     description =
         items[0].desc ||
-        `Artwork series “${title}” by YOUR NAME — ${items.length} works in ${section}.`;
+        `Artwork series “${title}” by ${site.authorName} — ${items.length} works in ${section}.`;
 }
 
 ---

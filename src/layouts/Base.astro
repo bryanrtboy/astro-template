@@ -1,6 +1,15 @@
 ---
-const { title = 'YOUR NAME', description = '' } = Astro.props;
+import site from '../data/site.json';
+import '../styles/global.css';
 import SiteFooter from '../components/SiteFooter.astro';
+import anchorFixUrl from '../scripts/anchor-hash-fix.js?url';
+
+// Props coming from each page
+const { frontmatter, title: t, description: d } = Astro.props;
+
+// Prefer explicit title/desc props, fall back to site defaults
+const title = t ?? frontmatter?.title ?? site.siteTitle ?? site.authorName;
+const description = d ?? frontmatter?.description ?? site.description ?? '';
 ---
 
 <!DOCTYPE html>
@@ -20,9 +29,9 @@ import SiteFooter from '../components/SiteFooter.astro';
     <meta property="og:title" content={title} />
     {description ? <meta property="og:description" content={description} /> : null}
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="YOUR NAME" />
+    <meta property="og:site_name" content={title} />
     <link rel="canonical" href={Astro.url.href} />
-    <meta name="author" content="YOUR NAME" />
+    <meta name="author" content={site.authorName} />
     <meta name="robots" content="index, follow" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -50,10 +59,10 @@ import SiteFooter from '../components/SiteFooter.astro';
     </style>
 
     <!-- Base.astro -->
-    <script is:inline>
+    <script is:inline define:vars={{ anchorFix: anchorFixUrl}}>
         if (location.hash) {
             const s = document.createElement('script');
-            s.src = '/js/anchor-hash-fix.js'; // file lives at: public/js/anchor-hash-fix.js
+            s.src = anchorFix; // file lives at: public/js/anchor-hash-fix.js
             s.defer = true;
             document.head.appendChild(s);
         }

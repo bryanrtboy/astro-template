@@ -1,5 +1,6 @@
 ---
 /* src/pages/[section].astro */
+import site from '../data/site.json';
 import '../styles/global.css';
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
@@ -67,10 +68,10 @@ if (hasSectionMd) {
 }
 
 
-const description = `Explore ${items.length} ${section} by Bryan Leister — a collection of digital and traditional artworks.`;
+const description = `Explore ${items.length} ${section} by ${site.authorName} — ${site.tagline}`;
 
 ---
-<Base title={`YOUR NAME – ${section}`} description={description}>
+<Base title={`${site.authorName} – ${section}`} description={description}>
     <SiteHeader/>
     <div class="wrap">
         <h1 style="text-transform:capitalize">{section.replace('-', ' ')}</h1>

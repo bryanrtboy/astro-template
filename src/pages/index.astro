@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import site from '../data/site.json';
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Grid from '../components/Grid.astro';
@@ -9,8 +10,8 @@ import HeroPicker from '../components/HeroPicker.astro';
 ---
 
 <Base
-        title="YOUR NAME - subititle"
-        description="Recent artworks by the artist."
+        title={`${site.authorName} ${site.tagline ?? ''}`}
+        description={site.description}
 >
     <SiteHeader/>
     <div class="wrap">

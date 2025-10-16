@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import site from '../data/site.json';
 ---
 <div class="lightbox" hidden aria-modal="true" role="dialog" aria-label="Image viewer">
     <div class="lb-backdrop"></div>
@@ -19,7 +20,7 @@ import '../styles/global.css';
     <button class="lb-next" aria-label="Next"></button>
 </div>
 
-<script is:inline>
+<script is:inline define:vars={{ email: site.email, authorName: site.authorName }}>
     (() => {
         const grid = document.querySelector('[data-grid]');
         const lb   = document.querySelector('.lightbox');
@@ -87,16 +88,16 @@ import '../styles/global.css';
         const renderCTA = ({ title, sale, hasDesc, hrefFull }) => {
             let primary;
             if (sale === 'A') {
-                primary = `<a class="lb-link" href="mailto:bryan@bryanleister.com?subject=${encodeURIComponent(`Purchase information for ${title}`)}">price inquiry</a>`;
+                primary = `<a class="lb-link" href="mailto:${email}?subject=${encodeURIComponent(`Purchase information for ${title}`)}">price inquiry</a>`;
             } else if (sale === 'W') {
-                primary = `<a class="lb-link" href="mailto:bwalker@walkerfineart.com?subject=${encodeURIComponent(`Price inquiry for ${title} by Bryan Leister`)}">price on request</a>`;
+                primary = `<a class="lb-link" href="mailto:${email}?subject=${encodeURIComponent(`Price inquiry for ${title} by ${authorName}`)}">price on request</a>`;
             } else {
                 primary = `<span>private collection</span>`;
             }
             // Optional “view full resolution” link to original /images file
             const full = hrefFull ? `<span class="lb-sep" aria-hidden="true"> · </span><a class="lb-link" href="${hrefFull}" target="_blank" rel="noopener">view full-resolution</a>` : '';
             const details = hasDesc ? `<span class="lb-sep" aria-hidden="true"> · </span><a href="#" class="lb-link lb-details-link">details</a>` : '';
-            return primary + full + details;w
+            return primary + full + details;
         };
 
         const show = (i) => {

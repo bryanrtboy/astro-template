@@ -1,12 +1,13 @@
 ---
-const sections = ['about', 'installations', 'paintings', 'prints', 'animation', 'archive'];
+import site from '../data/site.json';
+const sections = site.nav;
 import SearchBox from './SearchBox.astro';
 ---
 <header class="site-header">
     <div class="wrap hstack">
-        <a class="site-title" href="/">YOUR NAME</a>
+        <a class="site-title" href="/">{site.authorName}</a>
         <nav>
-            {sections.map(s => <a class="badge" href={`/${s}`}>{s}</a>)}
+            {sections.map(item => <a class="badge" href={item.href}>{item.label}</a>)}
         </nav>
         <div class="right">
         <SearchBox />

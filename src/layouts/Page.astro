@@ -1,10 +1,15 @@
 ---
-const { frontmatter, title: t, description: d } = Astro.props;
-const title = t ?? frontmatter?.title ?? 'YOUR NAME';
-const description = d ?? frontmatter?.description ?? '';
+import site from '../data/site.json';
 import '../styles/global.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+
+// Props coming from each page
+const { frontmatter, title: t, description: d } = Astro.props;
+
+// Prefer explicit title/desc props, fall back to site defaults
+const title = t ?? frontmatter?.title ?? site.siteTitle ?? site.authorName;
+const description = d ?? frontmatter?.description ?? site.description ?? '';
 ---
 
 <!doctype html>
@@ -17,9 +22,9 @@ import SiteFooter from '../components/SiteFooter.astro';
     <meta property="og:title" content={title} />
     {description ? <meta property="og:description" content={description} /> : null}
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="YOUR NAME" />
+    <meta property="og:site_name" content={site.authorName} />
     <link rel="canonical" href={Astro.url.href} />
-    <meta name="author" content="YOUR NAME" />
+    <meta name="author" content={site.authorName} />
     <meta name="robots" content="index, follow" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
