@@ -1,6 +1,7 @@
 // src/scripts/search-client.js
 import Fuse from 'fuse.js';
 
+
 (async () => {
     const qs   = new URLSearchParams(window.location.search);
     const q    = (qs.get('q') || '').trim();
