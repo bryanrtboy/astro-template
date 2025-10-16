@@ -32,4 +32,7 @@ export default defineConfig({
         sitemap(),
         mdx(),
     ],
+    optimizeDeps: {
+        include: ['fuse.js'], // ensures dev prebundling; harmless in build
+    },
 });
