@@ -5,6 +5,8 @@ A clean, rock‑solid Astro portfolio starter featuring:
 - Simple config via `src/data/site.json`
 - Three gallery styles (uniform grid, masonry + Lightbox, and deep‑link anchor grids)
 - Zero server backend — easy to deploy on Cloudflare Pages
+- Blazing fast even with loads of images LightHouse scores are 95>100
+- Totally free custom website if you use CloudFlares free tier
 
 [Live Demo](https://demo.bryanleister.com/)
 
