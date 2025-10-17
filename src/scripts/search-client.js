@@ -1,5 +1,5 @@
 // src/scripts/search-client.js
-import Fuse from 'fuse.js';
+import Fuse from 'https://cdn.skypack.dev/fuse.js';
 
 
 (async () => {
