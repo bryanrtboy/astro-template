@@ -33,8 +33,11 @@ export const prerender = true;
         <p id="empty-state">Type a phrase above to search pages and images.</p>
     </div>
     <!-- Client-side search -->
+    <script src="/scripts/fuse.min.js" defer > </script>
+
     <script type="module">
-        import Fuse from 'https://cdn.skypack.dev/fuse.js';
+        const Fuse = window.Fuse;
+        
         (async () => {
             const qs = new URLSearchParams(window.location.search);
             const q = (qs.get('q') || '').trim();
