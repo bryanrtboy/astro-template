@@ -24,7 +24,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/applications/#2012-07-07-visual-synth-installation",
+      "preferredHref": "/applications/visual-synthesizer/",
+      "collection": {
+        "slug": "visual-synthesizer",
+        "title": "Visual Synthesizer",
+        "url": "/applications/visual-synthesizer/"
+      }
     },
     {
       "section": "applications",
@@ -47,7 +54,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/applications/#2012-07-07-screenshot-5",
+      "preferredHref": "/applications/visual-synthesizer/",
+      "collection": {
+        "slug": "visual-synthesizer",
+        "title": "Visual Synthesizer",
+        "url": "/applications/visual-synthesizer/"
+      }
     },
     {
       "section": "applications",
@@ -70,7 +84,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/applications/#2012-07-07-screenshot-4",
+      "preferredHref": "/applications/visual-synthesizer/",
+      "collection": {
+        "slug": "visual-synthesizer",
+        "title": "Visual Synthesizer",
+        "url": "/applications/visual-synthesizer/"
+      }
     },
     {
       "section": "applications",
@@ -93,7 +114,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/applications/#2012-07-07-screenshot-3",
+      "preferredHref": "/applications/visual-synthesizer/",
+      "collection": {
+        "slug": "visual-synthesizer",
+        "title": "Visual Synthesizer",
+        "url": "/applications/visual-synthesizer/"
+      }
     },
     {
       "section": "applications",
@@ -116,7 +144,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/applications/#2012-07-07-screenshot-2",
+      "preferredHref": "/applications/visual-synthesizer/",
+      "collection": {
+        "slug": "visual-synthesizer",
+        "title": "Visual Synthesizer",
+        "url": "/applications/visual-synthesizer/"
+      }
     },
     {
       "section": "applications",
@@ -139,7 +174,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/applications/#2012-07-07-screenshot-1",
+      "preferredHref": "/applications/visual-synthesizer/",
+      "collection": {
+        "slug": "visual-synthesizer",
+        "title": "Visual Synthesizer",
+        "url": "/applications/visual-synthesizer/"
+      }
     }
   ]
 }

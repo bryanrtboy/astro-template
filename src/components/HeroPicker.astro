@@ -10,20 +10,13 @@ const {
     showCaption = false,
     captionClass = ''
 } = Astro.props as {
-    section?: string | string[];     // ⬅️ allow multiple
+    section?: string | string[];
     mode?: 'static' | 'random' | 'daily';
     ar?: number;
     limit?: number;
     showCaption?: boolean;
     captionClass?: string;
 };
-
-
-// after you compute `ar`, add a consistent intrinsic box:
-
-// Load section items
-// const mod = await import(`../data/sections/${section}.json`);
-// const items = (mod.default as GalleryItem[]);
 
 // Normalize section(s) -> array of section slugs
 const sections: string[] = Array.isArray(section)
@@ -35,7 +28,10 @@ const sections: string[] = Array.isArray(section)
 
 // Load section items from all sections
 // Keep the section name alongside each item so paths & links work
-const allItems: GalleryItem[] = [];
+const allItems: (GalleryItem & {
+    preferredHref?: string;
+    collection?: { slug: string; title: string; url: string } | null;
+})[] = [];
 for (const sec of sections) {
     try {
         const mod = await import(`../data/sections/${sec}.json`);
@@ -44,13 +40,20 @@ for (const sec of sections) {
             section: it.section || sec, // ensure section is set
         }));
         allItems.push(...items);
-    } catch (e) {
+    } catch (_e) {
         // silently skip a missing/invalid section file
     }
 }
 
 // Build per-section candidate lists, then balanced-merge before limiting
-type Cand = { stem: string; title: string; section: string; year: string };
+type Cand = {
+    stem: string;
+    title: string;
+    section: string;
+    year: string;
+    preferredHref?: string; // <-- NEW: passthrough from manifest
+    collection?: { slug: string; title: string; url: string } | null; // optional
+};
 
 // Group by section
 const bySection = new Map<string, Cand[]>();
@@ -62,7 +65,9 @@ for (const it of allItems) {
             stem,
             title: it.title || `${sec} artwork`,
             section: sec,
-            year: it.year || ''
+            year: it.year || '',
+            preferredHref: (it as any).preferredHref,         // <-- NEW
+            collection: (it as any).collection ?? null        // <-- optional, future caption
         };
         if (!bySection.has(sec)) bySection.set(sec, []);
         bySection.get(sec)!.push(cand);
@@ -95,7 +100,6 @@ for (const list of bySection.values()) shuffleInPlace(list);
 const candidates: Cand[] = [];
 if (bySection.size) {
     let progressed = true;
-    // Keep the iteration order stable: use the user-provided sections array
     while (candidates.length < limit && progressed) {
         progressed = false;
         for (const sec of sections) {
@@ -116,20 +120,24 @@ if (candidates.length === 0 && allItems.length) {
         stem: (it as any).stemFileSafe ?? encodeURIComponent(it.stem),
         title: it.title || `${it.section} artwork`,
         year: it.year || '',
-        section: it.section!
+        section: it.section!,
+        preferredHref: (it as any).preferredHref ?? `/${it.section}/#${encodeURIComponent(it.stem)}`,
+        collection: (it as any).collection ?? null
     });
 }
 
 const first = candidates[0];
 
-
-// srcset helpers (unchanged, but use `first.section`)
+// srcset helpers (unchanged)
 const widths = [720, 960, 1440];
 const set = (c: typeof candidates[number], ext: string) =>
     widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext} ${w}w`).join(', ');
 
 const sizes = 'calc(min(1200px, 100vw - 2.5rem))';
-const hrefFor = (c: typeof candidates[number]) => `/${c.section}#${c.stem}`;
+
+// Use preferredHref if present; otherwise fall back to section anchor
+const hrefFor = (c: typeof candidates[number]) => c.preferredHref ?? `/${c.section}/#${c.stem}`;
+
 const captionId = 'hero-caption';
 
 // Safely encode candidate data
@@ -137,7 +145,6 @@ const encoded = encodeURIComponent(JSON.stringify(candidates));
 
 const intrinsicW = 1440;
 const intrinsicH = Math.round(intrinsicW / ar);
-
 ---
 
 <section
@@ -169,18 +176,22 @@ const intrinsicH = Math.round(intrinsicW / ar);
             </picture>
 
             {showCaption ? (
-                /* Linked overlay with caption chip */
                     <a id="hero-overlay-link" class="hero-overlay has-caption" href={hrefFor(first)}>
-      <span class="hero-chip">
-        <span id="hero-overlay-text">{first.title}</span>
-          {first.year && <span class="hero-year"> {first.year}</span>}
-      </span>
+          <span class="hero-chip">
+            <span id="hero-overlay-text">{first.title}</span>
+              {first.year && <span class="hero-year"> {first.year}</span>}
+          </span>
                     </a>
             ) : (
-                /* Plain, invisible overlay that ensures consistent layout but no hover effect */
                     <div class="hero-overlay no-caption" aria-hidden="true"></div>
             )}
         </figure>
+        {first.collection && (
+                <p class="hero-caption">
+                    A project in the  <i>{first.section}</i> section
+                    <a class="badge" href={first.collection.url}>{first.collection.title}</a>
+                </p>
+        )}
 
     </div>
 </section>
@@ -209,7 +220,6 @@ const intrinsicH = Math.round(intrinsicW / ar);
         const c = picks[idx];
         const widths = [960, 1440, 1920];
         const buildSet = (ext) => widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext} ${w}w`).join(', ');
-        const hrefFor = (c) => `/${c.section}#${c.stem}`;
 
         const avif = document.getElementById('hero-avif');
         const webp = document.getElementById('hero-webp');
@@ -229,14 +239,26 @@ const intrinsicH = Math.round(intrinsicW / ar);
 
         if (showCaption) {
             const linkEl = document.getElementById('hero-overlay-link');
-            if (linkEl) linkEl.setAttribute('href', hrefFor(c));
+            // Prefer manifest-provided URL; fall back to section anchor
+            const href = c.preferredHref || `/${c.section}/#${c.stem}`;
+            if (linkEl) linkEl.setAttribute('href', href);
         }
-
 
         // Optional: update year if you render it
         const yearEl = document.querySelector('.hero-chip .hero-year');
         if (yearEl) yearEl.textContent = c.year ? ` ${c.year}` : '';
+
+        // Optional: update caption if it exists
+        const cap = document.querySelector('.hero-caption');
+        if (cap) {
+            if (c.collection) {
+                cap.innerHTML =
+                    `A project in the  <i>${c.section}</i> section – <a class="badge" href="${c.collection.url}">${c.collection.title}</a>`;
+            } else {
+                cap.textContent = '';
+            }
+        }
+
     })();
 </script>
-
     )}

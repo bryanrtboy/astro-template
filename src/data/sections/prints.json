@@ -20,7 +20,14 @@
       "copyright": "All rights reserved, no use is permitted  without written authorization from Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2019-09-30-Saguaro-Sky.2_W",
+    "preferredHref": "/prints/systems/",
+    "collection": {
+      "slug": "systems",
+      "title": "systems",
+      "url": "/prints/systems/"
+    }
   },
   {
     "section": "prints",
@@ -43,7 +50,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2019-09-30-Saguaro-Sky.1_W",
+    "preferredHref": "/prints/systems/",
+    "collection": {
+      "slug": "systems",
+      "title": "systems",
+      "url": "/prints/systems/"
+    }
   },
   {
     "section": "prints",
@@ -66,7 +80,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2019-09-30-Lavender-Mine.3_W",
+    "preferredHref": "/prints/systems/",
+    "collection": {
+      "slug": "systems",
+      "title": "systems",
+      "url": "/prints/systems/"
+    }
   },
   {
     "section": "prints",
@@ -89,7 +110,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2019-09-30-Lavender-Mine.2_W",
+    "preferredHref": "/prints/systems/",
+    "collection": {
+      "slug": "systems",
+      "title": "systems",
+      "url": "/prints/systems/"
+    }
   },
   {
     "section": "prints",
@@ -116,7 +144,10 @@
         "digital print"
       ]
     },
-    "sale": "PRIVATE"
+    "sale": "PRIVATE",
+    "sectionHref": "/prints/#2015-05-17-Columbine",
+    "preferredHref": "/prints/#2015-05-17-Columbine",
+    "collection": null
   },
   {
     "section": "prints",
@@ -143,7 +174,10 @@
         "digital print"
       ]
     },
-    "sale": "PRIVATE"
+    "sale": "PRIVATE",
+    "sectionHref": "/prints/#2015-05-17-Black-Billed-Magpie",
+    "preferredHref": "/prints/#2015-05-17-Black-Billed-Magpie",
+    "collection": null
   },
   {
     "section": "prints",
@@ -170,7 +204,10 @@
         "digital print"
       ]
     },
-    "sale": "PRIVATE"
+    "sale": "PRIVATE",
+    "sectionHref": "/prints/#2015-05-17-Bison",
+    "preferredHref": "/prints/#2015-05-17-Bison",
+    "collection": null
   },
   {
     "section": "prints",
@@ -197,7 +234,10 @@
         "digital print"
       ]
     },
-    "sale": "PRIVATE"
+    "sale": "PRIVATE",
+    "sectionHref": "/prints/#2015-05-17-Big-Horn-Sheep",
+    "preferredHref": "/prints/#2015-05-17-Big-Horn-Sheep",
+    "collection": null
   },
   {
     "section": "prints",
@@ -220,7 +260,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2010-02-21-form.05_W",
+    "preferredHref": "/prints/exolith-series/",
+    "collection": {
+      "slug": "exolith-series",
+      "title": "exolith series",
+      "url": "/prints/exolith-series/"
+    }
   },
   {
     "section": "prints",
@@ -243,7 +290,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2010-02-21-form.04_W",
+    "preferredHref": "/prints/exolith-series/",
+    "collection": {
+      "slug": "exolith-series",
+      "title": "exolith series",
+      "url": "/prints/exolith-series/"
+    }
   },
   {
     "section": "prints",
@@ -266,7 +320,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2010-02-21-form.03_W",
+    "preferredHref": "/prints/exolith-series/",
+    "collection": {
+      "slug": "exolith-series",
+      "title": "exolith series",
+      "url": "/prints/exolith-series/"
+    }
   },
   {
     "section": "prints",
@@ -289,7 +350,14 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2010-02-21-form.02_W",
+    "preferredHref": "/prints/exolith-series/",
+    "collection": {
+      "slug": "exolith-series",
+      "title": "exolith series",
+      "url": "/prints/exolith-series/"
+    }
   },
   {
     "section": "prints",
@@ -312,6 +380,13 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/prints/#2010-02-21-form.01_W",
+    "preferredHref": "/prints/exolith-series/",
+    "collection": {
+      "slug": "exolith-series",
+      "title": "exolith series",
+      "url": "/prints/exolith-series/"
+    }
   }
 ]

@@ -22,7 +22,10 @@
         "landscape"
       ]
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/paintings/#2025-08-20-ten-mile-(seam)_W",
+    "preferredHref": "/paintings/#2025-08-20-ten-mile-(seam)_W",
+    "collection": null
   },
   {
     "section": "paintings",
@@ -45,7 +48,10 @@
       "copyright": "Bryan Leister",
       "keywords": []
     },
-    "sale": "W"
+    "sale": "W",
+    "sectionHref": "/paintings/#2024-10-05-random-seed-66663333-(a-peony-surrounded-by-grey-and-black-butterflies)_W",
+    "preferredHref": "/paintings/#2024-10-05-random-seed-66663333-(a-peony-surrounded-by-grey-and-black-butterflies)_W",
+    "collection": null
   },
   {
     "section": "paintings",
@@ -70,6 +76,9 @@
         "portrait"
       ]
     },
-    "sale": "A"
+    "sale": "A",
+    "sectionHref": "/paintings/#1984-01-01-Michaelangelos-The-Libyan-Sibyl_A_5",
+    "preferredHref": "/paintings/#1984-01-01-Michaelangelos-The-Libyan-Sibyl_A_5",
+    "collection": null
   }
 ]

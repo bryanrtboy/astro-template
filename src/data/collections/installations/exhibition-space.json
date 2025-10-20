@@ -24,7 +24,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-9",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -47,7 +54,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-8",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -70,7 +84,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-7",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -93,7 +114,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-6",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -116,7 +144,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-5",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -139,7 +174,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-4",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -162,7 +204,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-3",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -185,7 +234,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-2",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -208,7 +264,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-13",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -231,7 +294,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-12",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -254,7 +324,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-11",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -277,7 +354,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-10",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     },
     {
       "section": "installations",
@@ -300,7 +384,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2006-09-10-Exhibition-Space-1",
+      "preferredHref": "/installations/exhibition-space/",
+      "collection": {
+        "slug": "exhibition-space",
+        "title": "Exhibition Space",
+        "url": "/installations/exhibition-space/"
+      }
     }
   ]
 }

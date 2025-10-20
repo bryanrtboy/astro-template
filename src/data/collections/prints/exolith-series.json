@@ -24,7 +24,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2010-02-21-form.05_W",
+      "preferredHref": "/prints/exolith-series/",
+      "collection": {
+        "slug": "exolith-series",
+        "title": "exolith series",
+        "url": "/prints/exolith-series/"
+      }
     },
     {
       "section": "prints",
@@ -47,7 +54,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2010-02-21-form.04_W",
+      "preferredHref": "/prints/exolith-series/",
+      "collection": {
+        "slug": "exolith-series",
+        "title": "exolith series",
+        "url": "/prints/exolith-series/"
+      }
     },
     {
       "section": "prints",
@@ -70,7 +84,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2010-02-21-form.03_W",
+      "preferredHref": "/prints/exolith-series/",
+      "collection": {
+        "slug": "exolith-series",
+        "title": "exolith series",
+        "url": "/prints/exolith-series/"
+      }
     },
     {
       "section": "prints",
@@ -93,7 +114,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2010-02-21-form.02_W",
+      "preferredHref": "/prints/exolith-series/",
+      "collection": {
+        "slug": "exolith-series",
+        "title": "exolith series",
+        "url": "/prints/exolith-series/"
+      }
     },
     {
       "section": "prints",
@@ -116,7 +144,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2010-02-21-form.01_W",
+      "preferredHref": "/prints/exolith-series/",
+      "collection": {
+        "slug": "exolith-series",
+        "title": "exolith series",
+        "url": "/prints/exolith-series/"
+      }
     }
   ]
 }

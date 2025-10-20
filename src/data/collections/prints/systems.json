@@ -24,7 +24,14 @@
         "copyright": "All rights reserved, no use is permitted  without written authorization from Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2019-09-30-Saguaro-Sky.2_W",
+      "preferredHref": "/prints/systems/",
+      "collection": {
+        "slug": "systems",
+        "title": "systems",
+        "url": "/prints/systems/"
+      }
     },
     {
       "section": "prints",
@@ -47,7 +54,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2019-09-30-Saguaro-Sky.1_W",
+      "preferredHref": "/prints/systems/",
+      "collection": {
+        "slug": "systems",
+        "title": "systems",
+        "url": "/prints/systems/"
+      }
     },
     {
       "section": "prints",
@@ -70,7 +84,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2019-09-30-Lavender-Mine.3_W",
+      "preferredHref": "/prints/systems/",
+      "collection": {
+        "slug": "systems",
+        "title": "systems",
+        "url": "/prints/systems/"
+      }
     },
     {
       "section": "prints",
@@ -93,7 +114,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "W"
+      "sale": "W",
+      "sectionHref": "/prints/#2019-09-30-Lavender-Mine.2_W",
+      "preferredHref": "/prints/systems/",
+      "collection": {
+        "slug": "systems",
+        "title": "systems",
+        "url": "/prints/systems/"
+      }
     }
   ]
 }

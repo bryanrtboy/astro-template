@@ -24,7 +24,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2008-04-05-screenshot-5",
+      "preferredHref": "/installations/hypocenter/",
+      "collection": {
+        "slug": "hypocenter",
+        "title": "hypocenter",
+        "url": "/installations/hypocenter/"
+      }
     },
     {
       "section": "installations",
@@ -47,7 +54,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2008-04-05-screenshot-4",
+      "preferredHref": "/installations/hypocenter/",
+      "collection": {
+        "slug": "hypocenter",
+        "title": "hypocenter",
+        "url": "/installations/hypocenter/"
+      }
     },
     {
       "section": "installations",
@@ -70,7 +84,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2008-04-05-screenshot-3",
+      "preferredHref": "/installations/hypocenter/",
+      "collection": {
+        "slug": "hypocenter",
+        "title": "hypocenter",
+        "url": "/installations/hypocenter/"
+      }
     },
     {
       "section": "installations",
@@ -93,7 +114,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2008-04-05-screenshot-2",
+      "preferredHref": "/installations/hypocenter/",
+      "collection": {
+        "slug": "hypocenter",
+        "title": "hypocenter",
+        "url": "/installations/hypocenter/"
+      }
     },
     {
       "section": "installations",
@@ -116,7 +144,14 @@
         "copyright": "Bryan Leister",
         "keywords": []
       },
-      "sale": "PRIVATE"
+      "sale": "PRIVATE",
+      "sectionHref": "/installations/#2008-04-05-screenshot-1",
+      "preferredHref": "/installations/hypocenter/",
+      "collection": {
+        "slug": "hypocenter",
+        "title": "hypocenter",
+        "url": "/installations/hypocenter/"
+      }
     }
   ]
 }

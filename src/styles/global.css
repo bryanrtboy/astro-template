@@ -60,7 +60,7 @@ a { color: inherit; }
     gap: .75rem;
     flex-wrap: wrap;
 }
-.hstack a { text-decoration: none; }
+.hstack a, .hero a { text-decoration: none; }
 
 .badge {
     font-size: .75rem;
@@ -401,7 +401,7 @@ mark {
     position: relative;
     width: 100%;
     aspect-ratio: var(--hero-ar, 16/9); /* reserve height to avoid CLS */
-    background: var(--hdr);
+    /*background: var(--hdr);*/
     border-radius: 1px;
     overflow: hidden;
 }
@@ -427,6 +427,11 @@ mark {
     position: absolute;
     inset: 0;
     display: block;
+}
+/* Project caption */
+
+.hero-caption{
+    font-size: .85rem;
 }
 
 /* Linked/captioned */

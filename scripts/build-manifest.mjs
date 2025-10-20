@@ -11,7 +11,6 @@ const SRC_DIR = path.join(ROOT, 'images');            // originals
 const OUT_DIR = path.join(ROOT, 'src', 'data');
 const OUT_SECTIONS_DIR = path.join(OUT_DIR, 'sections');
 
-
 function stripLeadingDate(stem) {
     return stem.replace(/^\d{4}(?:[-_]\d{2}){0,2}[-_]?/, '');
 }
@@ -53,7 +52,6 @@ const COLLECTIONS = [
         section: 'prints',
         slug: 'systems',
         title: 'systems',
-        // case-insensitive match against EXIF artist (you can add more rules below)
         where: (item) =>
             (item.exif?.artist || '').toLowerCase().includes('systems')
     },
@@ -61,7 +59,6 @@ const COLLECTIONS = [
         section: 'applications',
         slug: 'visual-synthesizer',
         title: 'Visual Synthesizer',
-        // case-insensitive match against EXIF artist (you can add more rules below)
         where: (item) =>
             (item.exif?.artist || '').toLowerCase().includes('visual synthesizer')
     },
@@ -69,7 +66,6 @@ const COLLECTIONS = [
         section: 'installations',
         slug: 'exhibition-space',
         title: 'Exhibition Space',
-        // case-insensitive match against EXIF artist (you can add more rules below)
         where: (item) =>
             (item.exif?.artist || '').toLowerCase().includes('exhibition space')
     },
@@ -77,7 +73,6 @@ const COLLECTIONS = [
         section: 'installations',
         slug: 'hypocenter',
         title: 'hypocenter',
-        // case-insensitive match against EXIF artist (you can add more rules below)
         where: (item) =>
             (item.exif?.artist || '').toLowerCase().includes('hypocenter')
     }
@@ -92,14 +87,12 @@ async function parseMeta(filePath, section) {
         throw new Error(`Illegal character in filename: ${base} (section: ${section}).`);
     }
 
-
     let width = null, height = null;
     try {
         const meta = await sharp(filePath).metadata();
         width = meta.width ?? null;
         height = meta.height ?? null;
-    } catch {
-    }
+    } catch {}
 
     const ar = (width && height) ? +(height / width).toFixed(6) : null;
     const yearMatch = stem.match(/\b(19|20)\d{2}\b/);
@@ -136,53 +129,104 @@ async function parseMeta(filePath, section) {
     return {
         section,
         src: `/images/${section}/${base}`,
-        href: `/images/${section}/${base}`, // you can also use encodeURIComponent(base) if you prefer
+        href: `/images/${section}/${base}`, // (kept) original image URL, used in some lightboxes
         stem, base, ext,
         title, year, slug, width, height, ar, rows, dateKey,
         exif, sale
     };
-
 }
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   STEP 1 — Build a collection lookup and enrich items with linking metadata
+   - Key by "<section>::<stem>" to avoid cross-section collisions.
+   - Each mapped value: { slug, title, url } (no year here)
+   - 'url' points to the collection page top: /<section>/<slug>/
+   ──────────────────────────────────────────────────────────────────────────── */
+function _key(section, stem) {
+    return `${section}::${stem}`;
+}
+
+function buildCollectionIndex(defs, itemsBySection) {
+    const map = new Map();
+    for (const def of defs) {
+        const { section, slug, title, where } = def;
+        const pool = itemsBySection[section] || [];
+        const items = pool.filter(where);
+        for (const it of items) {
+            map.set(_key(section, it.stem), {
+                slug,
+                title,
+                url: `/${section}/${slug}/`, // ← collection page (no #anchor)
+            });
+        }
+    }
+    return map;
+}
+
 
 async function buildManifests() {
     await fs.mkdir(OUT_SECTIONS_DIR, {recursive: true});
-    const index = [];
-    const itemsBySection = {};
 
+    // 1) Gather items for every section (no writes yet)
+    const itemsBySection = {};
     for (const section of SECTIONS) {
         const pattern = path.join(SRC_DIR, section, '**/*.{jpg,jpeg,JPG,JPEG,png,PNG}');
         const files = await fg(pattern.replace(/\\/g, '/'));
         let items = await Promise.all(files.map(f => parseMeta(f, section)));
-
         // newest-first
         items.sort((a, b) => b.dateKey.localeCompare(a.dateKey) || b.stem.localeCompare(a.stem));
         itemsBySection[section] = items;
-
-        await fs.writeFile(path.join(OUT_SECTIONS_DIR, `${section}.json`), JSON.stringify(items, null, 2), 'utf8');
-        index.push({section, count: items.length});
     }
 
-    // recent.json (top 20 across all, excluding certain sections)
+    // 2) Build collection index, then ENRICH items with preferred links + caption data
+    const collIndex = buildCollectionIndex(COLLECTIONS, itemsBySection);
+
+    for (const section of SECTIONS) {
+        const items = itemsBySection[section].map(it => {
+            const sectionHref = `/${section}/#${it.stem}`;       // safe fallback
+            const collection = collIndex.get(_key(section, it.stem)) || null; // {slug,title,url}|null
+            const preferredHref = collection?.url ?? sectionHref; // prefer collection page
+            return {
+                ...it,
+                sectionHref,
+                preferredHref,
+                collection, // no year here
+            };
+        });
+        itemsBySection[section] = items;
+    }
+    
+    // 3) Now write per-section JSON + sections index
+    const sectionsIndex = [];
+    for (const section of SECTIONS) {
+        const items = itemsBySection[section];
+        await fs.writeFile(
+            path.join(OUT_SECTIONS_DIR, `${section}.json`),
+            JSON.stringify(items, null, 2),
+            'utf8'
+        );
+        sectionsIndex.push({ section, count: items.length });
+    }
+
+    // 4) recent.json (top N across all, excluding certain sections)
     const EXCLUDE_RECENT = new Set(['applications', 'plein-air']);
 
     const all = Object.values(itemsBySection)
         .flat()
-        .filter(item => !EXCLUDE_RECENT.has(item.section))  // 👈 skip these sections
+        .filter(item => !EXCLUDE_RECENT.has(item.section))
         .sort((a, b) =>
             b.dateKey.localeCompare(a.dateKey) ||
             b.stem.localeCompare(a.stem)
         );
 
-// adjust count if you want fewer/more
     const RECENT_COUNT = 50;
-
     await fs.writeFile(
         path.join(OUT_DIR, 'recent.json'),
         JSON.stringify(all.slice(0, RECENT_COUNT), null, 2),
         'utf8'
     );
 
-    // archive = archive + paintings
+    // 5) archive = archive + paintings + prints + plein-air + drawings + installations
     const archivePlus = [
         ...(itemsBySection['archive'] ?? []),
         ...(itemsBySection['paintings'] ?? []),
@@ -190,13 +234,23 @@ async function buildManifests() {
         ...(itemsBySection['plein-air'] ?? []),
         ...(itemsBySection['drawings'] ?? []),
         ...(itemsBySection['installations'] ?? [])
-
     ].sort((a, b) => b.dateKey.localeCompare(a.dateKey) || b.stem.localeCompare(a.stem));
-    await fs.writeFile(path.join(OUT_SECTIONS_DIR, 'archive.json'), JSON.stringify(archivePlus, null, 2), 'utf8');
 
-    await fs.writeFile(path.join(OUT_DIR, 'sections.json'), JSON.stringify(index, null, 2), 'utf8');
+    await fs.writeFile(
+        path.join(OUT_SECTIONS_DIR, 'archive.json'),
+        JSON.stringify(archivePlus, null, 2),
+        'utf8'
+    );
+
+    await fs.writeFile(
+        path.join(OUT_DIR, 'sections.json'),
+        JSON.stringify(sectionsIndex, null, 2),
+        'utf8'
+    );
+
     console.log('✅ Manifest built.');
 
+    // 6) Existing collections writer (unchanged; benefits from same filter logic)
     const OUT_COLLECTIONS_DIR = path.join(OUT_DIR, 'collections');
 
     async function buildCollections(itemsBySection) {
@@ -223,10 +277,7 @@ async function buildManifests() {
     await buildCollections(itemsBySection);
 }
 
-
 buildManifests().catch(e => {
     console.error(e);
     process.exit(1);
 });
-
-
