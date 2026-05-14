@@ -1,248 +1,289 @@
 # Astro Portfolio Template
 
-A clean, rock‑solid Astro portfolio starter featuring:
+A clean Astro portfolio template for artwork, project pages, image galleries, search, and responsive thumbnails.
 
-- Simple config via `src/data/site.json`
-- Three gallery styles (uniform grid, masonry + Lightbox, and deep‑link anchor grids)
-- Zero server backend — easy to deploy on Cloudflare Pages
-- Blazing fast even with loads of images LightHouse scores are 95>100
-- Totally free custom website if you use CloudFlares free tier
+The content model is folder-based:
 
-[Live Demo](https://demo.bryanleister.com/)
+- Pages live in `src/content/pages/`.
+- The filesystem determines routes and parent/child relationships.
+- Image gallery data is generated from files in `images/`.
+- Page summaries use one frontmatter field: `excerpt`.
 
----
-
-## 1) Prerequisites (Mac setup from scratch)
-
-If you’ve never done local web development before, don’t worry — here’s everything you need.
-
-### Install Homebrew
-
-Homebrew is a package manager for macOS. It makes installing developer tools much easier.
-
-1. Open **Terminal** (press ⌘ + Space, type *Terminal*, hit Enter).
-2. Paste this command and press Enter:
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-3. When done, verify:
-
-```bash
-brew --version
-```
-
-### Install Node.js (and npm)
-
-Now install Node.js using Homebrew:
-
-```bash
-brew install node
-```
-
-Then confirm both Node and npm work:
-
-```bash
-node -v
-npm -v
-```
-
-You should see versions like `v20.x.x` or higher.
-
-### Install Git (if not already installed)
-
-```bash
-brew install git
-```
-
-Check:
-
-```bash
-git --version
-```
-
-You’re now ready to build your site locally.
+Live demo: https://demo.bryanleister.com/
 
 ---
 
-## 2) Quick Start (Local)
+## Quick Start
 
 ```bash
-# 1) Clone the template
 npx degit bryanrtboy/astro-template my-portfolio
 cd my-portfolio
-
-# 2) Install dependencies
 npm install
-
-# 3) Start the dev server
 npm run dev
 ```
 
-Open the printed local URL (usually `http://localhost:4321/` or `http://localhost:3000/`) and you should see the site.
+Open the local URL printed by Astro, usually `http://localhost:4321/`.
+
+Production build:
+
+```bash
+npm run build
+```
+
+Preview a production build:
+
+```bash
+npm run preview
+```
 
 ---
 
-## 3) Project Structure (high level)
+## Project Structure
 
-```
+```text
 my-portfolio/
-├─ public/                  # Static assets copied as-is
-├─ src/
-│  ├─ components/           # Reusable Astro components
-│  ├─ data/
-│  │  └─ site.json          # ← your site settings (name, email, etc.)
-│  ├─ layouts/              # Page layouts
-│  ├─ pages/                # Route-based pages (/, /search, /archive, etc.)
-│  ├─ styles/               # Global + component styles
-│  └─ content/ (optional)   # If you add content collections
-├─ thumbs/                  # Responsive thumbnails (if generated ahead of time)
-├─ package.json
-└─ astro.config.mjs
+├─ images/                   # Source/original images, organized by section
+│  ├─ applications/
+│  ├─ archive/
+│  ├─ installations/
+│  ├─ paintings/
+│  ├─ prints/
+│  └─ site/
+├─ public/
+│  ├─ images/                # Synced originals used by the live site
+│  ├─ thumbs/                # Generated responsive thumbnails
+│  └─ details/               # Public image detail JSON
+├─ scripts/
+│  ├─ sync-images.sh         # Mirrors images/ to public/images/
+│  ├─ gen-thumbs.mjs         # Generates responsive JPG/WebP/AVIF thumbs
+│  └─ build-manifest.mjs     # Generates gallery, detail, and collection JSON
+└─ src/
+   ├─ components/            # Reusable Astro components
+   ├─ content/
+   │  └─ pages/              # Markdown/MDX site pages
+   ├─ data/
+   │  ├─ site.json           # Site name, nav, email, footer links
+   │  ├─ sections/           # Generated section gallery JSON
+   │  ├─ collections/        # Generated child/project gallery JSON
+   │  ├─ details/            # Generated image detail JSON
+   │  └─ thumbs/             # Generated intrinsic image metadata
+   ├─ layouts/
+   ├─ lib/
+   ├─ pages/                 # Astro routes, search, home, 404
+   └─ styles/
 ```
 
 ---
 
-## 4) Configure Your Site — `src/data/site.json`
+## Site Settings And Navigation
 
-This file holds your basic info and site‑wide settings. Open it and update values like:
+Edit site-wide metadata and navigation in:
 
-```json
-{
-  "title": "Your Name – Art & Design",
-  "authorName": "Your Name",
-  "email": "you@example.com",
-  "description": "Portfolio of …",
-  "url": "https://your-domain.com"
-}
+```text
+src/data/site.json
 ```
 
-- **title**: Used in `<title>` and SEO
-- **authorName / email**: Shown in components like the Lightbox footer/contact
-- **description**: Site‑wide meta description
-- **url**: Your production URL (helps with sitemap/SEO)
+This controls the site name, description, contact emails, header navigation, and footer links.
 
-> After editing, restart `npm run dev` if the dev server doesn’t pick up changes.
+If you add a new top-level section and want it in the header, add it to `site.nav`.
 
 ---
 
-## 5) The Three Grid Modes (How the galleries work)
+## Page Structure
 
-### A) Archive – Uniform Grid
-- A clean, even grid (all cards the same height) for quick scanning.
-- Typically used on `/archive`.
-- Best when you want visual consistency.
+Content pages live in `src/content/pages/`. Folders create routes and hierarchy.
 
-### B) Sections / Projects – Masonry Grid + Lightbox
-- Masonry respects image aspect ratio for a lively wall‑of‑art.
-- Clicking a card opens a **Lightbox** overlay with image details and next/prev.
-- Good for section pages like `/paintings`, `/prints`, `/installations`.
+Examples:
 
-### C) Home & Search – Deep‑Link “Anchor” Grid
-- These use `#` anchors to **zoom into an image on its section page**.
-- Example: Clicking a search result sends you to `/paintings#2024-08-20-mountain-study` and auto‑scrolls/highlights that work.
-- Great for discovery: search and landing pages jump you straight to the piece in context.
-
-> You’ll see the grid type selected by the page’s component: uniform vs masonry vs anchor grids.
-
----
-
-## 6) Adding Your Work (where to put images)
-
-- Place images under a consistent folder structure (e.g., `public/images/paintings/…`) *or* use the existing `thumbs/` convention.
-- If the template includes a JSON manifest for a section (e.g., `src/data/paintings.json`), add a new entry following the shape:
-
-```json
-{
-  "id": "2024-08-20-mountain-study",   
-  "title": "Mountain Study",
-  "year": 2024,
-  "section": "paintings",
-  "src": "/images/paintings/mountain-study.jpg",
-  "alt": "Small mountain study in oil",
-  "tags": ["oil", "landscape"],
-  "width": 1600,
-  "height": 1200
-}
+```text
+src/content/pages/about.md
+src/content/pages/installations/index.md
+src/content/pages/installations/exhibition-space.mdx
+src/content/pages/applications/index.md
+src/content/pages/applications/visual-synthesizer.mdx
+src/content/pages/prints/systems.mdx
 ```
 
-- `id` should be unique (used by the `#anchor` deep‑link).
-- `year` enables sorting by most‑recent first in some views.
-- `src` should point to the image path you’ve added.
+These become:
 
-> After adding items, refresh the page. Some grids (search) may also rely on a generated `search-index.json` which is included in this template’s build steps.
+```text
+/about/
+/installations/
+/installations/exhibition-space/
+/applications/
+/applications/visual-synthesizer/
+/prints/systems/
+```
+
+Parent pages use `index.md` or `index.mdx` inside a folder. Child pages are sibling files in that folder.
+
+The site automatically:
+
+- Builds breadcrumbs from the folder path.
+- Shows direct child pages as image cards.
+- Uses each child page's `excerpt` for hover text.
+- Hides the broad image gallery underneath when child page cards exist.
 
 ---
 
-## 7) Git: Save Your Work & Push to GitHub
+## Frontmatter
+
+Use a small, consistent frontmatter shape:
+
+```yaml
+---
+title: Page Title
+excerpt: A short description of this page for SEO, search, and child-page cards.
+---
+```
+
+Optional fields:
+
+```yaml
+gallery: true
+showInParent: false
+menuOrder: 10
+keywords:
+  - example
+  - search term
+```
+
+- `title`: Page heading, browser title, and search title.
+- `excerpt`: The single source of truth for page summary text.
+- `gallery: true`: Shows the generated gallery for this page's route, such as `/paintings/` or `/archive/`.
+- `showInParent: false`: Hides a child page from its parent page's card grid.
+- `menuOrder`: Sorts child pages before falling back to title sorting.
+- `keywords`: Adds extra search terms for page search.
+
+Avoid adding separate `description` or `subtitle` fields for content pages. Use `excerpt`.
+
+---
+
+## Markdown vs MDX
+
+Use `.md` by default.
+
+Use `.mdx` only when the page needs Astro/JSX components or JSX-style markup.
+
+Good `.md` example:
+
+```md
+---
+title: About
+excerpt: Biography, artist statement, links, and background for the portfolio owner.
+---
+
+![Portrait of Your Name](/images/site/profile.jpg)
+
+## Links
+
+- [Resume](/resume/)
+- [Applications](/applications/)
+```
+
+Use `.mdx` for component-driven pages:
+
+```mdx
+---
+title: Example Video Project
+excerpt: A short project summary for SEO, search, and cards.
+---
+import HlsVideo from '../../../components/HlsVideo.astro';
+
+<HlsVideo
+  src="https://video.example.com/project/master.m3u8"
+  poster="https://video.example.com/project/poster.jpg"
+/>
+```
+
+`resume.mdx` intentionally keeps a raw HTML table because the resume is tabular content.
+
+---
+
+## Galleries And Images
+
+Put original images in `images/<section>/`.
+
+The starter sections are:
+
+```text
+applications
+archive
+installations
+paintings
+prints
+site
+```
+
+Optional generated sections are already supported by the scripts:
+
+```text
+drawings
+plein-air
+```
+
+The build pipeline runs automatically before `dev` and `build`:
 
 ```bash
-# Initialize a repo (if you didn’t fork)
-git init
-
-git add -A
-git commit -m "Initial commit: Astro portfolio template"
-
-# Create a new GitHub repo, then connect your local repo
-# Replace the URL with your GitHub repo’s URL
-git remote add origin https://github.com/<you>/<repo>.git
-git push -u origin main
+npm run prep
 ```
 
-> If your default branch is `master`, use that instead of `main`.
+That command:
 
+1. Mirrors `images/` into `public/images/`.
+2. Generates responsive thumbnails in `public/thumbs/`.
+3. Generates gallery JSON under `src/data/sections/`.
+4. Generates project/collection JSON under `src/data/collections/`.
+5. Generates image details under `src/data/details/` and `public/details/`.
+
+You normally do not edit generated JSON by hand.
+
+### Section Galleries
+
+A page like `src/content/pages/paintings/index.md` can show a generated gallery:
+
+```yaml
 ---
-
-## 8) Deploy to Cloudflare Pages
-
-1. Log in to Cloudflare and go to **Pages** → **Create a project**.
-2. **Connect to Git** and select your GitHub repo.
-3. **Build settings** (defaults are usually perfect for Astro):
-    - **Framework preset**: Astro (or “None” if you don’t see it)
-    - **Build command**: `npm run build`
-    - **Build output directory**: `dist`
-    - **Node version**: 18+ (Cloudflare manages this)
-4. Click **Save and Deploy**.
-5. Cloudflare will build and give you a live URL. Later you can add a custom domain.
-
-> For a static Astro site, no environment variables are required.
-
+title: Paintings
+excerpt: Paintings and related studio work.
+gallery: true
 ---
-
-## 9) Commands Reference
-
-```bash
-npm run dev      # Start local dev server
-npm run build    # Build production site into /dist
-npm run preview  # Preview the production build locally
 ```
 
----
+This uses `src/data/sections/paintings.json`, generated from `images/paintings/`.
 
-## 10) Troubleshooting
+### Project / Child Galleries
 
-- **Dev server shows a blank page**: Check the terminal for errors; confirm Node 18+.
-- **Images not appearing**: Verify file paths (e.g., `/images/...`) and JSON manifests.
-- **Anchors not scrolling/highlighting**: Ensure each item has a unique `id` and you’re linking like `/section#that-id`.
-- **Search not finding items**: Rebuild the search index by stopping/starting dev or running a fresh `npm run build`.
-- **Cloudflare build fails**: Make sure lockfile and `package.json` are pushed; confirm build command/output folder.
+Project pages like `/installations/exhibition-space/` can show a generated project gallery when matching collection data exists in:
 
----
+```text
+src/data/collections/installations/exhibition-space.json
+```
 
-## 11) Customize Styles & Components
-
-- Global CSS in `src/styles/` and utility classes in components.
-- Header/footer live in `src/components/` and layout in `src/layouts/`.
-- Feel free to rename sections (paintings, prints, installations) to fit your practice.
+Those collection files are generated by `scripts/build-manifest.mjs` from image metadata and collection rules.
 
 ---
 
-## 12) License & Attribution
+## Search
 
-- Use this template freely for your own site. A link back is appreciated but not required.
+Search is fully static and client-side.
+
+- `/search-index.json` is generated at build time from content pages and image manifests.
+- `/search/` loads the JSON and searches with Fuse.
+- Image results deep-link back to their section anchors, such as `/paintings/#image-stem`.
 
 ---
 
-**Happy building!** If you run into issues, open a GitHub issue on this repo with a short description, steps to reproduce, and screenshots if possible.
+## Deploy To Cloudflare Pages
 
+1. Push your site to GitHub.
+2. In Cloudflare Pages, create a project and connect the repo.
+3. Use these build settings:
+
+```text
+Framework preset: Astro
+Build command: npm run build
+Build output directory: dist
+```
+
+No environment variables are required for the static template.

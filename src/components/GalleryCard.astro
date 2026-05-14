@@ -3,25 +3,22 @@ import type { GalleryItem } from '../lib/types';
 import GalleryImage from './GalleryImage.astro';
 
 // Accept optional `priority` for LCP (pass true for the first couple images if desired)
-const { item, index, priority = false, useLightbox = true, linkToAnchor = false,  } = Astro.props as {
+const { item, index, priority = false, useLightbox = true, linkToAnchor = false, variant = 'masonry' } = Astro.props as {
     item: GalleryItem;
     index: number;
     priority?: boolean;
     useLightbox?: boolean;
     linkToAnchor?: boolean;
+    variant?: 'masonry' | 'uniform';
 };
 
-const artist = item.exif?.artist ?? '';
-const desc   = item.exif?.description ?? '';
-//const stemSafe = (item as any).stemFileSafe ?? encodeURIComponent(item.stem);
 const stemSafe = item.stem;
 const anchor   = `/${item.section}#${stemSafe}`;
-//const stemSafe = (item as any).stemFileSafe ?? encodeURIComponent(item.stem);
 
 // If no lightbox, link to the section page + anchor
 const anchorHref = `/${item.section}#${stemSafe}`;
-//const hrefTarget = useLightbox ? (item.href ?? item.src) : anchorHref;
-const hrefTarget = linkToAnchor ? anchor : (item.href ?? item.src);
+const originalHref = item.base ? `/images/${item.section}/${item.base}` : anchorHref;
+const hrefTarget = linkToAnchor ? anchor : (useLightbox ? originalHref : anchorHref);
 
 
 const initialSpan = Math.max(1, item.rows ?? 1); // fallback if rows missing
@@ -36,15 +33,12 @@ const ar = item.ar ?? null; // height/width from manifest
         data-ar={ar ?? ''}
         href={hrefTarget}
         rel="noopener"
-        data-title={item.title}
         data-year={item.year ?? ''}
-        data-artist={artist}
-        data-desc={desc}
         data-sale={item.sale ?? 'PRIVATE'}
-        data-section={item.section}          
-        data-stem={stemSafe}                 
+        data-section={item.section}
+        data-stem={stemSafe}
 >
-    <GalleryImage item={item} priority={priority} />
+    <GalleryImage item={item} priority={priority} variant={variant} />
 
     <div class="overlay" aria-hidden="true">
         <div>
@@ -53,4 +47,3 @@ const ar = item.ar ?? null; // height/width from manifest
         </div>
     </div>
 </a>
-

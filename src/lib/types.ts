@@ -1,10 +1,7 @@
 export type GalleryItem = {
     section: string;
-    src: string;          // raw path
-    href?: string;        // encoded path
     stem: string;
     base?: string;
-    ext?: string;
     title: string;
     year?: string;
     slug: string;
@@ -20,7 +17,22 @@ export type GalleryItem = {
         keywords?: string[];
     };
     sale?: 'A' | 'W' | 'PRIVATE';
+    preferredHref?: string;
+    src?: string;
+    href?: string;
+    collection?: {
+        slug: string;
+        title: string;
+        url: string;
+    } | null;
 };
+
+export type GalleryDetails = Record<string, {
+    href: string;
+    artist?: string;
+    description?: string;
+    keywords?: string[];
+}>;
 
 // Many of your listing JSON files are either [{...}, {...}] or { items: [...] }
 export type GalleryFile =
@@ -31,7 +43,7 @@ export type GalleryFile =
 
 // Content docs (MD/MDX via astro:content)
 export type SearchPageDoc = {
-    type: 'projects' | 'sections' | 'pages'; // add/remove keys to match your content config
+    type: 'pages';
     title: string;
     url: string;            // where to navigate
     text: string;           // stripped body used for search

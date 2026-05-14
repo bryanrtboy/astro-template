@@ -20,7 +20,7 @@ import site from '../data/site.json';
     <button class="lb-next" aria-label="Next"></button>
 </div>
 
-<script is:inline define:vars={{ email: site.email, authorName: site.authorName }}>
+<script is:inline define:vars={{ email: site.email, authorName: site.authorName, galleryEmail: site.galleryEmail }}>
     (() => {
         const grid = document.querySelector('[data-grid]');
         const lb   = document.querySelector('.lightbox');
@@ -40,6 +40,7 @@ import site from '../data/site.json';
         const detEl    = lb.querySelector('.lb-details');
 
         const cards = Array.from(grid.querySelectorAll('.card'));
+        const detailCache = new Map();
 
         // widths we actually generated
         const WIDTHS = [320, 480, 640, 720, 960, 1280, 1440, 1920];
@@ -53,32 +54,40 @@ import site from '../data/site.json';
         // Build a thumbs URL
         const thumbUrl = (section, stem, w, ext='avif') =>
             `/thumbs/${section}/${stem}-w${w}.${ext}`;
-        
+
+        const detailsUrl = (section) => `/details/${section}.json`;
+
+        const loadDetails = async (section) => {
+            if (!section) return {};
+            if (!detailCache.has(section)) {
+                detailCache.set(section, fetch(detailsUrl(section), { cache: 'force-cache' })
+                    .then((res) => (res.ok ? res.json() : {}))
+                    .catch(() => ({})));
+            }
+            return detailCache.get(section);
+        };
+
         const data = cards.map((card) => {
             const i      = parseInt(card.getAttribute('data-index') || '0', 10);
             const href   = card.getAttribute('href') || '';
-            const title  = card.dataset.title || '';
-            const year   = card.dataset.year || '';
-            const artist = card.dataset.artist || '';
-            const desc   = card.dataset.desc || '';
+            const title  = card.querySelector('.overlay .title')?.textContent?.trim() || '';
+            const year   = card.dataset.year || card.querySelector('.overlay .sub')?.textContent?.trim() || '';
             const sale   = (card.dataset.sale || 'PRIVATE').toUpperCase();
-            // 👇 new: where to fetch thumbs from
             const section = card.dataset.section || '';
             const stem    = card.dataset.stem || '';
-
-            // If you want to preserve AR to avoid CLS inside the lightbox, you can read it here
             const ar      = parseFloat(card.dataset.ar || '') || null;
 
-            return { i, href, title, year, artist, desc, sale, section, stem, ar };
+            return { i, href, title, year, sale, section, stem, ar };
         });
 
         let idx = 0;
         let lastFocus = null;
+        let showToken = 0;
 
         const preload = (i) => { 
             const d = data[i];
             if (!d || !d.section || !d.stem) return;
-            const w = 960; // sensible medium preload for neighbor
+            const w = 720; // lighter preload for neighbors
             const n = new Image();
             n.decoding = 'async';
             n.loading = 'eager';
@@ -90,7 +99,7 @@ import site from '../data/site.json';
             if (sale === 'A') {
                 primary = `<a class="lb-link" href="mailto:${email}?subject=${encodeURIComponent(`Purchase information for ${title}`)}">price inquiry</a>`;
             } else if (sale === 'W') {
-                primary = `<a class="lb-link" href="mailto:${email}?subject=${encodeURIComponent(`Price inquiry for ${title} by ${authorName}`)}">price on request</a>`;
+                primary = `<a class="lb-link" href="mailto:${galleryEmail}?subject=${encodeURIComponent(`Price inquiry for ${title} by ${authorName}`)}">price on request</a>`;
             } else {
                 primary = `<span>private collection</span>`;
             }
@@ -100,9 +109,10 @@ import site from '../data/site.json';
             return primary + full + details;
         };
 
-        const show = (i) => {
+        const show = async (i) => {
             if (i < 0 || i >= data.length) return;
             idx = i;
+            const token = ++showToken;
             const item = data[idx];
 
             // 👇 CHANGED: compute an appropriate thumb for the current viewport
@@ -115,27 +125,35 @@ import site from '../data/site.json';
             // Prefer AVIF; browser falls back to JPEG if unsupported
             if (item.section && item.stem) {
                 imgEl.src = thumbUrl(item.section, item.stem, w, 'avif');
-                // Optionally set width/height to keep ratio stable (if you can pass them)
-                // imgEl.width = itemW; imgEl.height = itemH;
             } else {
-                // Fallback to original href if something’s missing
                 imgEl.src = item.href;
             }
-            
+
             tEl.textContent = item.title;
-            aEl.textContent = item.artist || '';
+            aEl.textContent = '';
             yEl.textContent = item.year || '';
-            dotEl.style.display = (item.artist && item.year) ? '' : 'none';
-            const hasDesc = !!item.desc;
-            ctaEl.innerHTML = renderCTA({ title: item.title, sale: item.sale, hasDesc });
-            detEl.textContent = item.desc || '';
+            dotEl.style.display = 'none';
+            ctaEl.innerHTML = renderCTA({ title: item.title, sale: item.sale, hasDesc: false, hrefFull: '' });
+            detEl.textContent = '';
             detEl.classList.remove('show');
             lb.classList.remove('details-open');
             btnPrev.disabled = (idx <= 0);
             btnNext.disabled = (idx >= data.length - 1);
-            // Nav + neighbor preloads (use thumbs)
             if (idx + 1 < data.length) preload(idx + 1);
             if (idx - 1 >= 0) preload(idx - 1);
+
+            const details = await loadDetails(item.section);
+            if (token !== showToken) return;
+
+            const detail = details?.[item.stem] || {};
+            const artist = detail.artist || '';
+            const desc = detail.description || '';
+            const hrefFull = detail.href || '';
+            aEl.textContent = artist;
+            dotEl.style.display = (artist && item.year) ? '' : 'none';
+            const hasDesc = !!desc;
+            ctaEl.innerHTML = renderCTA({ title: item.title, sale: item.sale, hasDesc, hrefFull });
+            detEl.textContent = desc;
         };
 
         const open = (i) => { lastFocus = document.activeElement; lb.hidden = false; body.classList.add('no-scroll'); show(i); (btnClose || lb).focus(); };

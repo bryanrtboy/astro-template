@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-    site: 'https://www.bryanleister.com',
+    site: 'https://demo.bryanleister.com',
 
     // Inline tiny route CSS into the HTML to avoid a render-blocking request
     // (your ~2.2 KiB /_astro/_section_*.css will be inlined).

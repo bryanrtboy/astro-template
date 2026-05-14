@@ -3,9 +3,10 @@ export const prerender = true;
 
 import type { APIRoute } from 'astro';
 import { getCollection, type DataEntryMap } from 'astro:content';
+import { pagePath } from '../lib/page-routing';
 
 // Only collections that actually live in src/content/**
-const COLLECTIONS = ['projects', 'sections'] as const satisfies readonly (keyof DataEntryMap)[];
+const COLLECTIONS = ['pages'] as const satisfies readonly (keyof DataEntryMap)[];
 
 // ---- utils ----
 function stripHtml(md = '') {
@@ -68,18 +69,30 @@ function pathToRoute(key: string): string {
 // prefer `slug` (stable/URL-safe). fallback to `stem`.
 const imageKey = (img: any) => (img?.slug || img?.stem || '').toLowerCase();
 
-// Canonical detail URL for an image (prefer explicit `url`, else /section/slug)
+// Canonical detail URL for an image (prefer listing hrefs, else section anchor)
 const detailUrlFor = (img: any) =>
+    img?.preferredHref ||
+    (img?.section && img?.stem ? `/${img.section}#${img.stem}` : '') ||
     img?.url ||
-    (img?.section && (img?.slug || img?.stem) ? `/${img.section}/${(img.slug || img.stem)}` : '');
+    '';
 
 // ---- glob JSONs for images on listing pages ----
 const sectionJsonMods = import.meta.glob('../data/sections/*.json', { eager: true }) as Record<string, any>;
 const collectionJsonMods = import.meta.glob('../data/collections/*/*.json', { eager: true }) as Record<string, any>;
+const detailJsonMods = import.meta.glob('../data/details/*.json', { eager: true }) as Record<string, any>;
+
+const detailMap = new Map<string, any>();
+for (const [modKey, modObj] of Object.entries(detailJsonMods)) {
+    const section = modKey.split('/').pop()?.replace(/\.json$/i, '') || '';
+    const data = (modObj as any).default ?? modObj;
+    for (const [stem, detail] of Object.entries(data || {})) {
+        detailMap.set(`${section}::${stem}`, detail);
+    }
+}
 
 // ✅ NEW: glob .md/.mdx under /src/pages to index them as "pages"
-const routedMdMods  = import.meta.glob('../pages/**/*.md',  { eager: true, as: 'raw' }) as Record<string, string>;
-const routedMdxMods = import.meta.glob('../pages/**/*.mdx', { eager: true, as: 'raw' }) as Record<string, string>;
+const routedMdMods  = import.meta.glob('../pages/**/*.md',  { eager: true, query: '?raw', import: 'default' }) as Record<string, string>;
+const routedMdxMods = import.meta.glob('../pages/**/*.mdx', { eager: true, query: '?raw', import: 'default' }) as Record<string, string>;
 
 // Ignore specific /pages files from the index (e.g., search page itself)
 const IGNORE_PAGE_PATHS = [
@@ -96,12 +109,12 @@ export const GET: APIRoute = async () => {
         const entries = await getCollection(name);
         for (const e of entries) {
             contentItems.push({
-                type: name, // 'projects' | 'sections'
+                type: name,
                 title: e.data.title ?? e.slug,
-                description: (e as any).data?.description ?? '',
+                description: (e as any).data?.excerpt ?? '',
                 keywords: (e as any).data?.keywords ?? [],
                 text: stripHtml((e as any).body ?? ''),
-                url: `/${e.slug}`,
+                url: pagePath(e as any),
             });
         }
     }
@@ -157,13 +170,16 @@ export const GET: APIRoute = async () => {
             const key = imageKey(img);
             if (!key) continue;
 
-            const artist = img?.exif?.artist || '';
-            const description = img?.exif?.description || '';
-            const keywords: string[] = Array.isArray(img?.exif?.keywords) ? img.exif.keywords : [];
+            const detail = detailMap.get(`${img?.section || ''}::${img?.stem || ''}`) || {};
+            const artist = detail.artist || img?.exif?.artist || '';
+            const description = detail.description || img?.exif?.description || '';
+            const keywords: string[] = Array.isArray(detail.keywords) ? detail.keywords
+                : (Array.isArray(img?.exif?.keywords) ? img.exif.keywords : []);
             const year = img?.year ?? null;
             const section = img?.section ?? '';
 
             const canonicalUrl = detailUrlFor(img);
+            const thumb = (section && img?.stem) ? `/thumbs/${section}/${img.stem}-w480.jpg` : '';
 
             if (!images.has(key)) {
                 images.set(key, {
@@ -176,7 +192,7 @@ export const GET: APIRoute = async () => {
                     section,
                     slug: img?.slug,
                     stem: img?.stem,
-                    thumb: img?.src, // first seen thumb OK; swap to preferred size if needed
+                    thumb,
                     url: canonicalUrl,
                     text: [img?.title, description, artist, keywords.join(' '), year, section]
                         .filter(Boolean)
@@ -186,7 +202,7 @@ export const GET: APIRoute = async () => {
                 });
             } else {
                 const existing = images.get(key)!;
-                if (!existing.thumb && img?.src) existing.thumb = img.src;
+                if (!existing.thumb && thumb) existing.thumb = thumb;
                 if (!existing.url && canonicalUrl) existing.url = canonicalUrl;
                 if (!existing.section && section) existing.section = section;
                 if (!existing.title && img?.title) existing.title = img.title;
@@ -205,7 +221,7 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify(index), {
         headers: {
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=3600, immutable',
+            'Cache-Control': 'public, max-age=3600, must-revalidate',
         },
     });
 };

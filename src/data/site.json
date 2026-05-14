@@ -6,6 +6,7 @@
   "description": "Site Description",
   "footerName": "YOUR FOOTER CREDITS",
   "email" : "you@youremail.com",
+  "galleryEmail" : "gallery@example.com",
   "nav": [
     { "href": "/about/",         "label": "about" },
     { "href": "/installations/", "label": "installations" },
@@ -17,6 +18,6 @@
   "links": {
     "resume": "/resume/",
     "applications": "/applications/",
-    "privacy": "/privacy/"
+    "privacy": "/privacy-policy/"
   }
 }

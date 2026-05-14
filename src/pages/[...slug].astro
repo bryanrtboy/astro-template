@@ -1,0 +1,219 @@
+---
+import '../styles/global.css';
+import site from '../data/site.json';
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Grid from '../components/Grid.astro';
+import { getCollection } from 'astro:content';
+import { comparePages, displayTitle, isDirectFolderChild, normalizePagePath, pagePath } from '../lib/page-routing';
+import type { GalleryItem } from '../lib/types';
+
+export async function getStaticPaths() {
+    const pages = await getCollection('pages');
+    return pages
+        .filter((page) => pagePath(page) !== '/')
+        .map((page) => ({
+            params: { slug: pagePath(page).replace(/^\/|\/$/g, '') },
+            props: { page, pages },
+        }));
+}
+
+const { page, pages } = Astro.props;
+const { Content } = await page.render();
+const currentPath = pagePath(page);
+const currentKey = currentPath.replace(/^\/|\/$/g, '');
+
+const sectionModules = import.meta.glob<{ default: GalleryItem[] }>('../data/sections/*.json', { eager: true });
+const collectionModules = import.meta.glob<{ default: { title: string; items: GalleryItem[] } }>('../data/collections/*/*.json', { eager: true });
+
+const galleryItems = page.data.gallery
+    ? sectionModules[`../data/sections/${currentKey}.json`]?.default ?? []
+    : [];
+
+const collection = collectionModules[`../data/collections/${currentKey}.json`]?.default;
+const collectionItems = collection?.items ?? [];
+
+const uniformGalleryPaths = new Set(['/archive/', '/paintings/', '/drawings/', '/prints/', '/plein-air/']);
+const galleryVariant = uniformGalleryPaths.has(currentPath) ? 'uniform' : 'masonry';
+
+const folderChildren = pages
+    .filter((entry) => entry.data.type === 'page' && entry.data.showInParent && isDirectFolderChild(entry, currentPath))
+    .sort(comparePages);
+
+const pagesByPath = new Map(pages.map((entry) => [pagePath(entry), entry]));
+
+function fallbackTitleFromPath(path: string) {
+    const slug = path.replace(/^\/|\/$/g, '').split('/').pop() || '';
+    return displayTitle(slug);
+}
+
+function titleForPath(path: string) {
+    const entry = pagesByPath.get(normalizePagePath(path));
+    return entry ? displayTitle(entry.data.title) : fallbackTitleFromPath(path);
+}
+
+function breadcrumbsForPath(path: string) {
+    const segments = path.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
+    return segments.map((_, index) => {
+        const crumbPath = normalizePagePath(`/${segments.slice(0, index + 1).join('/')}`);
+        return {
+            path: crumbPath,
+            title: titleForPath(crumbPath),
+            current: crumbPath === path,
+        };
+    });
+}
+
+function galleryKeyForPath(path: string) {
+    return path === '/' ? 'home' : path.replace(/^\/|\/$/g, '');
+}
+
+function normalizeImageSrc(src = '') {
+    const cleaned = src.replace(/%22.*$/i, '').replace(/&amp;/g, '&');
+
+    try {
+        const url = new URL(cleaned, 'https://www.bryanleister.com/');
+        if (url.hostname === 'www.bryanleister.com' || url.hostname === 'bryanleister.com') {
+            return url.pathname;
+        }
+    } catch {
+        return cleaned;
+    }
+
+    return cleaned;
+}
+
+function firstImageFromItems(items: GalleryItem[] = []) {
+    const image = items.find((item) => item?.src || item?.href);
+    if (image) return normalizeImageSrc(image.src || image.href);
+
+    const thumb = items.find((item) => item?.section && item?.stem);
+    return thumb ? `/thumbs/${thumb.section}/${thumb.stem}-w480.jpg` : null;
+}
+
+function firstImageFromGallery(entry: typeof page) {
+    const key = galleryKeyForPath(pagePath(entry));
+    const sectionItems = sectionModules[`../data/sections/${key}.json`]?.default ?? [];
+    const sectionImage = firstImageFromItems(sectionItems);
+    if (sectionImage) return sectionImage;
+
+    const childCollection = collectionModules[`../data/collections/${key}.json`]?.default;
+    return firstImageFromItems(childCollection?.items ?? []);
+}
+
+function firstImageFromBody(body = '') {
+    const imageMatch = body.match(/<img\b[^>]*\bsrc=["']([^"']+\.(?:avif|gif|jpe?g|png|webp)(?:%22)?[^"']*)["']/i);
+    if (imageMatch) return normalizeImageSrc(imageMatch[1]);
+
+    const markdownImageMatch = body.match(/!\[[^\]]*\]\(([^)]+\.(?:avif|gif|jpe?g|png|webp)(?:\?[^)]*)?)\)/i);
+    if (markdownImageMatch) return normalizeImageSrc(markdownImageMatch[1]);
+
+    const backgroundMatch = body.match(/background-image:\s*url\(["']?([^"')]+\.(?:avif|gif|jpe?g|png|webp)(?:%22)?[^"')]*)["']?\)/i);
+    if (backgroundMatch) return normalizeImageSrc(backgroundMatch[1]);
+
+    return null;
+}
+
+function firstImageForEntry(entry: typeof page, seen = new Set<string>()) {
+    if (!entry || seen.has(entry.id)) return null;
+    seen.add(entry.id);
+
+    const galleryImage = firstImageFromGallery(entry);
+    if (galleryImage) return galleryImage;
+
+    const directImage = firstImageFromBody(entry.body);
+    if (directImage) return directImage;
+
+    const descendants = pages
+        .filter((candidate) => isDirectFolderChild(candidate, pagePath(entry)))
+        .sort(comparePages);
+
+    for (const descendant of descendants) {
+        const image = firstImageForEntry(descendant, seen);
+        if (image) return image;
+    }
+
+    return null;
+}
+
+function cleanHtml(value = '') {
+    return value
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&hellip;/g, '...')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#8217;/g, "'")
+        .replace(/&#8220;/g, '"')
+        .replace(/&#8221;/g, '"')
+        .replace(/&#(\d+);/g, (_, codePoint) => String.fromCodePoint(Number(codePoint)))
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+const sectionFallbackImage = firstImageForEntry(page);
+
+const relatedPages = folderChildren.map((child) => ({
+    path: pagePath(child),
+    title: displayTitle(child.data.title),
+    description: cleanHtml(child.data.excerpt || ''),
+    image: firstImageForEntry(child) || sectionFallbackImage,
+}));
+const showGallery = relatedPages.length === 0;
+
+const title = displayTitle(page.data.title);
+const description = page.data.excerpt || `${title} by ${site.authorName}`;
+const breadcrumbs = breadcrumbsForPath(currentPath);
+---
+
+<Base title={`${title} | ${site.authorName}`} description={description}>
+    <SiteHeader />
+    <main class="wrap content-page">
+        <article class="content-body">
+            {breadcrumbs.length ? (
+                <nav class="eyebrow breadcrumb" aria-label="Breadcrumb">
+                    {breadcrumbs.map((crumb, index) => (
+                        <>
+                            {index > 0 ? <span class="breadcrumb__separator" aria-hidden="true">/</span> : null}
+                            {crumb.current ? (
+                                <span aria-current="page">{crumb.title}</span>
+                            ) : (
+                                <a href={crumb.path}>{crumb.title}</a>
+                            )}
+                        </>
+                    ))}
+                </nav>
+            ) : null}
+            <h1>{title}</h1>
+            <Content />
+        </article>
+
+        {relatedPages.length ? (
+            <nav class="child-pages" aria-label={`${title} pages`}>
+                <div class="related-card-grid">
+                    {relatedPages.map((child) => (
+                        <a class={`related-card${child.image ? '' : ' related-card--empty'}`} href={child.path}>
+                            {child.image ? <img src={child.image} alt="" loading="lazy" decoding="async" /> : null}
+                            <span class="related-card__overlay">
+                                <span class="related-card__title">{child.title}</span>
+                                {child.description ? <small class="related-card__description">{child.description}</small> : null}
+                            </span>
+                        </a>
+                    ))}
+                </div>
+            </nav>
+        ) : null}
+
+        {showGallery && collectionItems.length ? (
+            <section class="page-gallery" aria-label={`${title} image gallery`}>
+                <Grid items={collectionItems} />
+            </section>
+        ) : null}
+
+        {showGallery && galleryItems.length ? (
+            <section class="page-gallery" aria-label={`${title} image gallery`}>
+                <Grid items={galleryItems} variant={galleryVariant} />
+            </section>
+        ) : null}
+    </main>
+</Base>

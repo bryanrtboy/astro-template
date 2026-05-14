@@ -5,7 +5,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import anchorFixUrl from '../scripts/anchor-hash-fix.js?url';
 
 // Props coming from each page
-const { frontmatter, title: t, description: d } = Astro.props;
+const { frontmatter, title: t, description: d, bodyClass } = Astro.props;
 
 // Prefer explicit title/desc props, fall back to site defaults
 const title = t ?? frontmatter?.title ?? site.siteTitle ?? site.authorName;
@@ -29,7 +29,7 @@ const description = d ?? frontmatter?.description ?? site.description ?? '';
     <meta property="og:title" content={title} />
     {description ? <meta property="og:description" content={description} /> : null}
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={title} />
+    <meta property="og:site_name" content={site.authorName} />
     <link rel="canonical" href={Astro.url.href} />
     <meta name="author" content={site.authorName} />
     <meta name="robots" content="index, follow" />
@@ -130,7 +130,7 @@ const description = d ?? frontmatter?.description ?? site.description ?? '';
 
 </head>
 
-<body>
+<body class={bodyClass}>
 <slot />
 <SiteFooter />
 </body>

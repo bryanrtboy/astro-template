@@ -5,18 +5,21 @@ import path from 'path';
 import sharp from 'sharp';
 import exifr from 'exifr';
 
-const SECTIONS = ['applications', 'archive', 'installations', 'paintings','prints'];
+const SECTIONS = ['applications', 'archive', 'drawings', 'installations', 'paintings', 'plein-air', 'prints'];
 const ROOT = process.cwd();
 const SRC_DIR = path.join(ROOT, 'images');            // originals
 const OUT_DIR = path.join(ROOT, 'src', 'data');
 const OUT_SECTIONS_DIR = path.join(OUT_DIR, 'sections');
+const OUT_DETAILS_DIR = path.join(OUT_DIR, 'details');
+const PUBLIC_DETAILS_DIR = path.join(ROOT, 'public', 'details');
 
 function stripLeadingDate(stem) {
     return stem.replace(/^\d{4}(?:[-_]\d{2}){0,2}[-_]?/, '');
 }
 
 function stripTrailingVariants(stem) {
-    const token = '(?:[A-Z]|v\\d+|\\d+|w\\d+|\\d{2,5}x\\d{2,5}|WEB|PRINT|FINAL|EDIT|DRAFT|PROOF|SMALL|LARGE)';
+    const pairedToken = '(?:[A-Z][_-]\\d+)';
+    const token = `(?:${pairedToken}|[A-Z]|v\\d+|w\\d+|\\d{2,5}x\\d{2,5}|WEB|PRINT|FINAL|EDIT|DRAFT|PROOF|SMALL|LARGE)`;
     const SUFFIX = new RegExp(`(?:[_-]${token})+$`, 'i');
     let s = stem;
     while (SUFFIX.test(s)) s = s.replace(SUFFIX, '');
@@ -52,6 +55,7 @@ const COLLECTIONS = [
         section: 'prints',
         slug: 'systems',
         title: 'systems',
+        // case-insensitive match against EXIF artist (you can add more rules below)
         where: (item) =>
             (item.exif?.artist || '').toLowerCase().includes('systems')
     },
@@ -128,11 +132,40 @@ async function parseMeta(filePath, section) {
 
     return {
         section,
-        src: `/images/${section}/${base}`,
-        href: `/images/${section}/${base}`, // (kept) original image URL, used in some lightboxes
+        originalHref: `/images/${section}/${base}`,
         stem, base, ext,
         title, year, slug, width, height, ar, rows, dateKey,
         exif, sale
+    };
+}
+
+function toListingItem(item) {
+    const {
+        section, stem, base, title, year, slug, width, height, ar, rows, sale, preferredHref, collection
+    } = item;
+    return {
+        section,
+        stem,
+        base,
+        title,
+        year,
+        slug,
+        width,
+        height,
+        ar,
+        rows,
+        sale,
+        preferredHref,
+        collection
+    };
+}
+
+function toDetailItem(item) {
+    return {
+        href: item.originalHref,
+        artist: item.exif?.artist || '',
+        description: item.exif?.description || '',
+        keywords: Array.isArray(item.exif?.keywords) ? item.exif.keywords : [],
     };
 }
 
@@ -166,6 +199,8 @@ function buildCollectionIndex(defs, itemsBySection) {
 
 async function buildManifests() {
     await fs.mkdir(OUT_SECTIONS_DIR, {recursive: true});
+    await fs.mkdir(OUT_DETAILS_DIR, {recursive: true});
+    await fs.mkdir(PUBLIC_DETAILS_DIR, {recursive: true});
 
     // 1) Gather items for every section (no writes yet)
     const itemsBySection = {};
@@ -195,16 +230,21 @@ async function buildManifests() {
         });
         itemsBySection[section] = items;
     }
-    
-    // 3) Now write per-section JSON + sections index
+
+    // 3) Write lean per-section JSON + detail manifests
     const sectionsIndex = [];
     for (const section of SECTIONS) {
         const items = itemsBySection[section];
+        const listingItems = items.map(toListingItem);
+        const detailItems = Object.fromEntries(items.map((item) => [item.stem, toDetailItem(item)]));
         await fs.writeFile(
             path.join(OUT_SECTIONS_DIR, `${section}.json`),
-            JSON.stringify(items, null, 2),
+            JSON.stringify(listingItems, null, 2),
             'utf8'
         );
+        const detailJson = JSON.stringify(detailItems, null, 2);
+        await fs.writeFile(path.join(OUT_DETAILS_DIR, `${section}.json`), detailJson, 'utf8');
+        await fs.writeFile(path.join(PUBLIC_DETAILS_DIR, `${section}.json`), detailJson, 'utf8');
         sectionsIndex.push({ section, count: items.length });
     }
 
@@ -217,7 +257,8 @@ async function buildManifests() {
         .sort((a, b) =>
             b.dateKey.localeCompare(a.dateKey) ||
             b.stem.localeCompare(a.stem)
-        );
+        )
+        .map(toListingItem);
 
     const RECENT_COUNT = 50;
     await fs.writeFile(
@@ -234,7 +275,9 @@ async function buildManifests() {
         ...(itemsBySection['plein-air'] ?? []),
         ...(itemsBySection['drawings'] ?? []),
         ...(itemsBySection['installations'] ?? [])
-    ].sort((a, b) => b.dateKey.localeCompare(a.dateKey) || b.stem.localeCompare(a.stem));
+
+    ].sort((a, b) => b.dateKey.localeCompare(a.dateKey) || b.stem.localeCompare(a.stem))
+        .map(toListingItem);
 
     await fs.writeFile(
         path.join(OUT_SECTIONS_DIR, 'archive.json'),
@@ -250,7 +293,7 @@ async function buildManifests() {
 
     console.log('✅ Manifest built.');
 
-    // 6) Existing collections writer (unchanged; benefits from same filter logic)
+    // 6) Write lean collections
     const OUT_COLLECTIONS_DIR = path.join(OUT_DIR, 'collections');
 
     async function buildCollections(itemsBySection) {
@@ -260,7 +303,8 @@ async function buildManifests() {
             const {section, slug, title, where} = def;
             const pool = itemsBySection[section] || [];
             const items = pool.filter(where)
-                .sort((a, b) => b.dateKey.localeCompare(a.dateKey) || b.stem.localeCompare(a.stem));
+                .sort((a, b) => b.dateKey.localeCompare(a.dateKey) || b.stem.localeCompare(a.stem))
+                .map(toListingItem);
 
             const outDir = path.join(OUT_COLLECTIONS_DIR, section);
             const outPath = path.join(outDir, `${slug}.json`);
