@@ -12,6 +12,7 @@ const OUT_DIR = path.join(ROOT, 'src', 'data');
 const OUT_SECTIONS_DIR = path.join(OUT_DIR, 'sections');
 const OUT_DETAILS_DIR = path.join(OUT_DIR, 'details');
 const PUBLIC_DETAILS_DIR = path.join(ROOT, 'public', 'details');
+const CONTENT_PAGES_DIR = path.join(ROOT, 'src', 'content', 'pages');
 
 function stripLeadingDate(stem) {
     return stem.replace(/^\d{4}(?:[-_]\d{2}){0,2}[-_]?/, '');
@@ -48,44 +49,177 @@ const COLLECTIONS = [
         section: 'prints',
         slug: 'exolith-series',
         title: 'exolith series',
-        where: (item) =>
-            (item.exif?.artist || '').toLowerCase().includes('exolith series')
+        where: (img) => (img.exif?.artist || '').toLowerCase().includes('exolith series'),
     },
     {
         section: 'prints',
         slug: 'systems',
         title: 'systems',
-        // case-insensitive match against EXIF artist (you can add more rules below)
-        where: (item) =>
-            (item.exif?.artist || '').toLowerCase().includes('systems')
+        where: (img) => (img.exif?.artist || '').toLowerCase().includes('systems'),
     },
     {
         section: 'applications',
         slug: 'visual-synthesizer',
         title: 'Visual Synthesizer',
-        where: (item) =>
-            (item.exif?.artist || '').toLowerCase().includes('visual synthesizer')
+        where: (img) => (img.exif?.artist || '').toLowerCase().includes('visual synthesizer'),
     },
     {
         section: 'installations',
         slug: 'exhibition-space',
         title: 'Exhibition Space',
-        where: (item) =>
-            (item.exif?.artist || '').toLowerCase().includes('exhibition space')
+        where: (img) => (img.exif?.artist || '').toLowerCase().includes('exhibition space'),
     },
     {
         section: 'installations',
         slug: 'hypocenter',
         title: 'hypocenter',
-        where: (item) =>
-            (item.exif?.artist || '').toLowerCase().includes('hypocenter')
-    }
+        where: (img) => (img.exif?.artist || '').toLowerCase().includes('hypocenter'),
+    },
 ];
+
+function normalizeForMatch(value = '') {
+    return String(value)
+        .toLowerCase()
+        .replace(/['’]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function collectionHaystack(item) {
+    return normalizeForMatch([
+        item.title,
+        item.slug,
+        item.stem,
+        item.exif?.artist,
+        item.exif?.description,
+        ...(Array.isArray(item.exif?.keywords) ? item.exif.keywords : []),
+    ].filter(Boolean).join(' '));
+}
+
+function collectionNeedles(section, slug, title) {
+    const slugSegments = slug.split('/').filter(Boolean);
+    const leafSlug = slugSegments.at(-1) || slug;
+
+    return Array.from(new Set([
+        normalizeForMatch(title),
+        normalizeForMatch(slug),
+        normalizeForMatch(slug.replace(/-/g, ' ')),
+        normalizeForMatch(leafSlug),
+        normalizeForMatch(leafSlug.replace(/-/g, ' ')),
+        normalizeForMatch(`${section} ${slug}`),
+    ].filter(Boolean)));
+}
+
+function frontmatterValue(raw, key) {
+    const match = raw.match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, 'm'));
+    if (!match) return '';
+
+    return match[1]
+        .replace(/^["']|["']$/g, '')
+        .trim();
+}
+
+function frontmatterList(raw, key) {
+    const block = raw.match(new RegExp(`^${key}:\\s*\\n((?:\\s+-\\s+.+\\n?)+)`, 'm'));
+    if (block) {
+        return block[1]
+            .split('\n')
+            .map((line) => line.match(/^\s+-\s+(.+?)\s*$/)?.[1])
+            .filter(Boolean)
+            .map((value) => value.replace(/^["']|["']$/g, '').trim());
+    }
+
+    const inline = frontmatterValue(raw, key);
+    if (!inline) return [];
+
+    return inline
+        .replace(/^\[|\]$/g, '')
+        .split(',')
+        .map((value) => value.replace(/^["']|["']$/g, '').trim())
+        .filter(Boolean);
+}
+
+function itemTokens(item) {
+    return new Set([
+        normalizeForMatch(item.stem),
+        normalizeForMatch(item.slug),
+        normalizeForMatch(item.title),
+        normalizeForMatch(cleanTitleFromStem(item.stem)),
+    ].filter(Boolean));
+}
+
+function itemMatchesToken(item, value) {
+    const needle = normalizeForMatch(value);
+    return needle ? itemTokens(item).has(needle) : false;
+}
+
+function isDefaultGalleryExcluded(item) {
+    const titleTokens = normalizeForMatch(cleanTitleFromStem(item.stem)).split(' ').filter(Boolean);
+    return titleTokens.at(-1) === 'icon';
+}
+
+async function discoverContentCollections() {
+    const defs = [];
+
+    for (const section of SECTIONS) {
+        const sectionDir = path.join(CONTENT_PAGES_DIR, section);
+        const files = await fg(['**/*.md', '**/*.mdx'], {cwd: sectionDir, onlyFiles: true});
+
+        for (const file of files) {
+            const contentPath = file
+                .replace(/\\/g, '/')
+                .replace(/\.mdx?$/i, '')
+                .replace(/\/index$/i, '');
+            if (!contentPath || contentPath === 'index') continue;
+
+            const raw = await fs.readFile(path.join(sectionDir, file), 'utf8');
+            const slug = contentPath;
+            const title = frontmatterValue(raw, 'title') || cleanTitleFromStem(slug.split('/').at(-1) || slug);
+            const needles = collectionNeedles(section, slug, title);
+            const galleryInclude = frontmatterList(raw, 'galleryInclude');
+            const galleryExclude = frontmatterList(raw, 'galleryExclude');
+
+            defs.push({
+                section,
+                slug,
+                title,
+                where: (item) => {
+                    const haystack = collectionHaystack(item);
+                    const isIncluded = galleryInclude.some((value) => itemMatchesToken(item, value));
+                    const isExcluded = galleryExclude.some((value) => itemMatchesToken(item, value));
+                    if (isExcluded && !isIncluded) return false;
+                    if (isDefaultGalleryExcluded(item) && !isIncluded) return false;
+                    return isIncluded || needles.some((needle) => haystack.includes(needle));
+                },
+            });
+        }
+    }
+
+    return defs;
+}
+
+function mergeCollectionDefs(...groups) {
+    const byKey = new Map();
+
+    for (const group of groups) {
+        for (const def of group) {
+            byKey.set(`${def.section}/${def.slug}`, def);
+        }
+    }
+
+    return Array.from(byKey.values()).sort((a, b) =>
+        a.section.localeCompare(b.section) ||
+        a.title.localeCompare(b.title)
+    );
+}
 
 async function parseMeta(filePath, section) {
     const base = path.basename(filePath);
     const ext = path.extname(base);
     const stem = base.slice(0, -ext.length);
+    const fileStat = await fs.stat(filePath);
+    const assetVersion = Math.floor(fileStat.mtimeMs);
 
     if (/[#/?\\ ]/.test(base)) {
         throw new Error(`Illegal character in filename: ${base} (section: ${section}).`);
@@ -132,8 +266,9 @@ async function parseMeta(filePath, section) {
 
     return {
         section,
-        originalHref: `/images/${section}/${base}`,
+        originalHref: `/images/${section}/${base}?v=${assetVersion}`,
         stem, base, ext,
+        thumbVersion: assetVersion,
         title, year, slug, width, height, ar, rows, dateKey,
         exif, sale
     };
@@ -141,12 +276,13 @@ async function parseMeta(filePath, section) {
 
 function toListingItem(item) {
     const {
-        section, stem, base, title, year, slug, width, height, ar, rows, sale, preferredHref, collection
+        section, stem, base, title, year, slug, width, height, ar, rows, sale, preferredHref, collection, thumbVersion
     } = item;
     return {
         section,
         stem,
         base,
+        thumbVersion,
         title,
         year,
         slug,
@@ -201,6 +337,7 @@ async function buildManifests() {
     await fs.mkdir(OUT_SECTIONS_DIR, {recursive: true});
     await fs.mkdir(OUT_DETAILS_DIR, {recursive: true});
     await fs.mkdir(PUBLIC_DETAILS_DIR, {recursive: true});
+    const collectionDefs = mergeCollectionDefs(COLLECTIONS, await discoverContentCollections());
 
     // 1) Gather items for every section (no writes yet)
     const itemsBySection = {};
@@ -214,7 +351,7 @@ async function buildManifests() {
     }
 
     // 2) Build collection index, then ENRICH items with preferred links + caption data
-    const collIndex = buildCollectionIndex(COLLECTIONS, itemsBySection);
+    const collIndex = buildCollectionIndex(collectionDefs, itemsBySection);
 
     for (const section of SECTIONS) {
         const items = itemsBySection[section].map(it => {
@@ -299,7 +436,7 @@ async function buildManifests() {
     async function buildCollections(itemsBySection) {
         const index = [];
 
-        for (const def of COLLECTIONS) {
+        for (const def of collectionDefs) {
             const {section, slug, title, where} = def;
             const pool = itemsBySection[section] || [];
             const items = pool.filter(where)
@@ -308,8 +445,12 @@ async function buildManifests() {
 
             const outDir = path.join(OUT_COLLECTIONS_DIR, section);
             const outPath = path.join(outDir, `${slug}.json`);
-            await fs.mkdir(outDir, {recursive: true});
+            await fs.mkdir(path.dirname(outPath), {recursive: true});
             await fs.writeFile(outPath, JSON.stringify({section, slug, title, items}, null, 2), 'utf8');
+
+            if (items.length === 0) {
+                console.warn(`⚠️  No images matched ${section}/${slug}. Include "${normalizeForMatch(title) || slug}" in the image filename or metadata.`);
+            }
 
             index.push({section, slug, title, count: items.length});
         }

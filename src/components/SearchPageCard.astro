@@ -1,0 +1,12 @@
+---
+const { url, titleHtml, snippetHtml } = Astro.props as {
+    url: string;
+    titleHtml: string;   // already marked up with <mark>…</mark>
+    snippetHtml?: string;
+};
+---
+
+<li class="page-item">
+    <a class="page-link" href={url} set:html={titleHtml} />
+    {snippetHtml ? <p class="snippet" set:html={snippetHtml} /> : null}
+</li>

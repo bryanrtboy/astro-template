@@ -1,5 +1,94 @@
-# Default rule — for HTML files
-/*
+# HTML routes
+/
+  Cache-Control: max-age=0, must-revalidate
+
+/404.html
+  Cache-Control: max-age=0, must-revalidate
+
+/about
+  Cache-Control: max-age=0, must-revalidate
+/about/
+  Cache-Control: max-age=0, must-revalidate
+
+/animation
+  Cache-Control: max-age=0, must-revalidate
+/animation/
+  Cache-Control: max-age=0, must-revalidate
+
+/applications
+  Cache-Control: max-age=0, must-revalidate
+/applications/
+  Cache-Control: max-age=0, must-revalidate
+/applications/*
+  Cache-Control: max-age=0, must-revalidate
+
+/archive
+  Cache-Control: max-age=0, must-revalidate
+/archive/
+  Cache-Control: max-age=0, must-revalidate
+
+/dr-privacy-policy
+  Cache-Control: max-age=0, must-revalidate
+/dr-privacy-policy/
+  Cache-Control: max-age=0, must-revalidate
+
+/drawings
+  Cache-Control: max-age=0, must-revalidate
+/drawings/
+  Cache-Control: max-age=0, must-revalidate
+
+/installations
+  Cache-Control: max-age=0, must-revalidate
+/installations/
+  Cache-Control: max-age=0, must-revalidate
+/installations/*
+  Cache-Control: max-age=0, must-revalidate
+
+/live-performance
+  Cache-Control: max-age=0, must-revalidate
+/live-performance/
+  Cache-Control: max-age=0, must-revalidate
+
+/modello-privacy-policy
+  Cache-Control: max-age=0, must-revalidate
+/modello-privacy-policy/
+  Cache-Control: max-age=0, must-revalidate
+
+/paintings
+  Cache-Control: max-age=0, must-revalidate
+/paintings/
+  Cache-Control: max-age=0, must-revalidate
+
+/plein-air
+  Cache-Control: max-age=0, must-revalidate
+/plein-air/
+  Cache-Control: max-age=0, must-revalidate
+
+/prints
+  Cache-Control: max-age=0, must-revalidate
+/prints/
+  Cache-Control: max-age=0, must-revalidate
+/prints/*
+  Cache-Control: max-age=0, must-revalidate
+
+/privacy-policy
+  Cache-Control: max-age=0, must-revalidate
+/privacy-policy/
+  Cache-Control: max-age=0, must-revalidate
+
+/resume
+  Cache-Control: max-age=0, must-revalidate
+/resume/
+  Cache-Control: max-age=0, must-revalidate
+
+/search
+  Cache-Control: max-age=0, must-revalidate
+/search/
+  Cache-Control: max-age=0, must-revalidate
+
+/support
+  Cache-Control: max-age=0, must-revalidate
+/support/
   Cache-Control: max-age=0, must-revalidate
 
 # For Astro's static JS/CSS (hashed filenames)
@@ -14,8 +103,14 @@
  /thumbs/*
   Cache-Control: public, max-age=31536000, immutable
 
-#to silence a Lighthouse complaint
+# For generated JSON indexes
+ /details/*
+  Cache-Control: public, max-age=3600, must-revalidate
 
+ /search-index.json
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# to silence a Lighthouse complaint
 /animation
   Content-Type: text/html; charset=utf-8
 

@@ -276,12 +276,14 @@ export const prerender = true;
             function srcsetFor(item, ext) {
                 const section = (item.section || '').toString();
                 const stem = stemSafeFrom(item);
-                return searchWidths.map(w => `/thumbs/${section}/${stem}-w${w}.${ext} ${w}w`).join(', ');
+                const suffix = item.thumbVersion ? `?v=${encodeURIComponent(item.thumbVersion.toString())}` : '';
+                return searchWidths.map(w => `/thumbs/${section}/${stem}-w${w}.${ext}${suffix} ${w}w`).join(', ');
             }
             function pictureHTML(item, priority) {
                 const section = (item.section || '').toString();
                 const stem = stemSafeFrom(item);
-                const fallbackSrc = `/thumbs/${section}/${stem}-w480.jpg`;
+                const suffix = item.thumbVersion ? `?v=${encodeURIComponent(item.thumbVersion.toString())}` : '';
+                const fallbackSrc = `/thumbs/${section}/${stem}-w480.jpg${suffix}`;
                 const width = item.width || '';
                 const height = item.height || '';
                 const alt = (item.title || '').replace(/"/g, '&quot;');

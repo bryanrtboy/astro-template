@@ -1,7 +1,8 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 const pages = defineCollection({
-    type: 'content',
+    loader: glob({ base: './src/content/pages', pattern: '**/*.{md,mdx}' }),
     schema: z.object({
         id: z.number().optional(),
         type: z.enum(['page']).default('page'),
@@ -15,7 +16,9 @@ const pages = defineCollection({
         featuredMedia: z.number().default(0),
         excerpt: z.string().optional(),
         keywords: z.array(z.string()).optional(),
-        gallery: z.boolean().default(false),
+        gallery: z.boolean().optional(),
+        galleryInclude: z.array(z.string()).optional(),
+        galleryExclude: z.array(z.string()).optional(),
         showInParent: z.boolean().default(true),
     }),
 });

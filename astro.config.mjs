@@ -5,6 +5,9 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
     site: 'https://demo.bryanleister.com',
+    devToolbar: {
+        enabled: false,
+    },
 
     // Inline tiny route CSS into the HTML to avoid a render-blocking request
     // (your ~2.2 KiB /_astro/_section_*.css will be inlined).
@@ -32,7 +35,7 @@ export default defineConfig({
         sitemap(),
         mdx(),
     ],
-    optimizeDeps: {
+  optimizeDeps: {
         include: ['fuse.js'], // ensures dev prebundling; harmless in build
-    },
+  },
 });

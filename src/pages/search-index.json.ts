@@ -110,7 +110,7 @@ export const GET: APIRoute = async () => {
         for (const e of entries) {
             contentItems.push({
                 type: name,
-                title: e.data.title ?? e.slug,
+                title: e.data.title ?? e.id,
                 description: (e as any).data?.excerpt ?? '',
                 keywords: (e as any).data?.keywords ?? [],
                 text: stripHtml((e as any).body ?? ''),
@@ -179,7 +179,9 @@ export const GET: APIRoute = async () => {
             const section = img?.section ?? '';
 
             const canonicalUrl = detailUrlFor(img);
-            const thumb = (section && img?.stem) ? `/thumbs/${section}/${img.stem}-w480.jpg` : '';
+            const thumbVersion = img?.thumbVersion;
+            const thumbVersionSuffix = thumbVersion ? `?v=${encodeURIComponent(String(thumbVersion))}` : '';
+            const thumb = (section && img?.stem) ? `/thumbs/${section}/${img.stem}-w480.jpg${thumbVersionSuffix}` : '';
 
             if (!images.has(key)) {
                 images.set(key, {
@@ -192,6 +194,7 @@ export const GET: APIRoute = async () => {
                     section,
                     slug: img?.slug,
                     stem: img?.stem,
+                    thumbVersion,
                     thumb,
                     url: canonicalUrl,
                     text: [img?.title, description, artist, keywords.join(' '), year, section]

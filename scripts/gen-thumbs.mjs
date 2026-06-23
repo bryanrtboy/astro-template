@@ -10,7 +10,6 @@ import sharp from 'sharp';
 import {promises as fs} from 'fs';
 import path from 'path';
 
-const SECTIONS = ['applications', 'archive', 'drawings', 'installations', 'paintings', 'plein-air', 'prints', 'site'];
 const ROOT = process.cwd();
 const SRC_DIR = path.join(ROOT, 'images');              // originals here
 const OUT_DIR = path.join(ROOT, 'public', 'thumbs');    // thumbs here
@@ -18,13 +17,30 @@ const OUT_DIR = path.join(ROOT, 'public', 'thumbs');    // thumbs here
 const WIDTHS = [320, 480, 640, 720, 960, 1280, 1440, 1920];
 const QUALITY_JPG = 82;
 const QUALITY_WEBP = 82;
-const QUALITY_AVIF = 50;
+const FORCE_THUMBS = process.env.FORCE_THUMBS === '1';
+const avifQualityForWidth = (width) => {
+    if (width <= 480) return 38;
+    if (width <= 720) return 42;
+    if (width <= 960) return 46;
+    return 50;
+};
 
 // …
 const DATA_THUMBS_DIR = path.join(ROOT, 'src', 'data', 'thumbs');
 
 
 // --- NEW: helper to block # in filenames (defensive) ---
+async function discoverSections() {
+    const files = await fg('**/*.{jpg,jpeg,JPG,JPEG,png,PNG,tif,tiff,TIF,TIFF,webp,WEBP}', {
+        cwd: SRC_DIR,
+        onlyFiles: true,
+    });
+
+    return [...new Set(files.map((file) => path.dirname(file).replaceAll(path.sep, '/')))]
+        .filter((section) => section !== '.')
+        .sort();
+}
+
 function assertNoHashes(basenames) {
     const offenders = basenames.filter(n => n.includes('#'));
     if (offenders.length) {
@@ -33,6 +49,17 @@ function assertNoHashes(basenames) {
             `Found filenames containing '#', aborting thumbnail generation:\n${list}\n` +
             `Rename these files so URLs map 1:1 to files.`
         );
+    }
+}
+
+async function shouldWriteThumb(srcStat, outAbs) {
+    if (FORCE_THUMBS) return true;
+
+    try {
+        const outStat = await fs.stat(outAbs);
+        return srcStat.mtimeMs > outStat.mtimeMs;
+    } catch {
+        return true;
     }
 }
 
@@ -56,23 +83,26 @@ async function pruneStaleThumbs(expectedSet) {
 async function generate() {
     // Gather all input files by section
     const expected = new Set(); // relative paths inside OUT_DIR we create this run
+    const sections = await discoverSections();
 
-    for (const section of SECTIONS) {
+    for (const section of sections) {
         const inSection = path.join(SRC_DIR, section);
         const outSection = path.join(OUT_DIR, section);
 
         // NEW: collect intrinsic sizes keyed by stem
         const metaByStem = {};
 
-        const files = await fg(['**/*.{jpg,jpeg,png,tif,tiff,webp}'], {cwd: inSection, onlyFiles: true});
+        const files = await fg(['**/*.{jpg,jpeg,JPG,JPEG,png,PNG,tif,tiff,TIF,TIFF,webp,WEBP}'], {cwd: inSection, onlyFiles: true});
 
         await fs.mkdir(outSection, {recursive: true});
 
         for (const rel of files) {
             const srcAbs = path.join(inSection, rel);
+            const srcStat = await fs.stat(srcAbs);
             const base = path.basename(srcAbs);
             const ext = path.extname(base);
             const stem = base.slice(0, -ext.length);
+            let writtenForSource = 0;
 
             // NEW: read intrinsic dimensions once
             let metaW = null, metaH = null;
@@ -94,11 +124,10 @@ async function generate() {
                     const relOut = path.join(section, `${stem}-w${w}.jpg`);
                     const outAbs = path.join(OUT_DIR, relOut);
                     expected.add(relOut);
-                    try {
-                        await fs.access(outAbs);
-                    } catch {
+                    if (await shouldWriteThumb(srcStat, outAbs)) {
                         await fs.mkdir(path.dirname(outAbs), {recursive: true});
                         await pipeline.clone().jpeg({quality: QUALITY_JPG, mozjpeg: true}).toFile(outAbs);
+                        writtenForSource++;
                     }
                 }
 
@@ -107,11 +136,10 @@ async function generate() {
                     const relOut = path.join(section, `${stem}-w${w}.webp`);
                     const outAbs = path.join(OUT_DIR, relOut);
                     expected.add(relOut);
-                    try {
-                        await fs.access(outAbs);
-                    } catch {
+                    if (await shouldWriteThumb(srcStat, outAbs)) {
                         await fs.mkdir(path.dirname(outAbs), {recursive: true});
                         await pipeline.clone().webp({quality: QUALITY_WEBP}).toFile(outAbs);
+                        writtenForSource++;
                     }
                 }
 
@@ -120,13 +148,15 @@ async function generate() {
                     const relOut = path.join(section, `${stem}-w${w}.avif`);
                     const outAbs = path.join(OUT_DIR, relOut);
                     expected.add(relOut);
-                    try {
-                        await fs.access(outAbs);
-                    } catch {
+                    if (await shouldWriteThumb(srcStat, outAbs)) {
                         await fs.mkdir(path.dirname(outAbs), {recursive: true});
-                        await pipeline.clone().avif({quality: QUALITY_AVIF}).toFile(outAbs);
+                        await pipeline.clone().avif({quality: avifQualityForWidth(w)}).toFile(outAbs);
+                        writtenForSource++;
                     }
                 }
+            }
+            if (writtenForSource > 0) {
+                console.log(`↻ ${section}/${rel}: wrote ${writtenForSource} thumbnails`);
             }
             // NEW: write _meta.json to src/data/thumbs/<section>/_meta.json
             const outMetaDir = path.join(DATA_THUMBS_DIR, section);
