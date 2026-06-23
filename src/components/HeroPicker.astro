@@ -8,7 +8,13 @@ const {
     ar = 16 / 9,
     limit = 24,
     showCaption = false,
-    captionClass = ''
+    captionClass = '',
+
+    // NEW knobs
+    biasHoriz = 0.7,         // 0..1 → higher favors horizontals on selection
+    minPortraitPct = 50,     // width% used for very-portrait (≈9:16)
+    maxLandscapePct = 100,   // width% used for very-landscape (≈16:9)
+    portraitAR = 0.8         // if first pick ar < portraitAR → try two-up
 } = Astro.props as {
     section?: string | string[];
     mode?: 'static' | 'random' | 'daily';
@@ -16,6 +22,11 @@ const {
     limit?: number;
     showCaption?: boolean;
     captionClass?: string;
+
+    biasHoriz?: number;
+    minPortraitPct?: number;
+    maxLandscapePct?: number;
+    portraitAR?: number;
 };
 
 // Normalize section(s) -> array of section slugs
@@ -26,53 +37,85 @@ const sections: string[] = Array.isArray(section)
         .map(s => s.trim())
         .filter(Boolean);
 
-// Load section items from all sections
-// Keep the section name alongside each item so paths & links work
+
+
+// Load section items from all sections (keep section on each item)
 const allItems: (GalleryItem & {
     preferredHref?: string;
     collection?: { slug: string; title: string; url: string } | null;
 })[] = [];
+
+function normalizeAR(it: any): number | undefined {
+    // Prefer explicit width/height if present
+    const w = Number(it.width), h = Number(it.height);
+    if (Number.isFinite(w) && Number.isFinite(h) && h > 0) {
+        return w / h; // width / height
+    }
+    // Fallback to provided ar (which is height/width in your data)
+    const raw = Number(it.ar);
+    if (Number.isFinite(raw) && raw > 0) {
+        return raw > 1 ? 1 / raw : raw; // flip if it's height/width
+    }
+    return undefined;
+}
+
 for (const sec of sections) {
     try {
         const mod = await import(`../data/sections/${sec}.json`);
         const items = (mod.default as GalleryItem[]).map(it => ({
             ...it,
-            section: it.section || sec, // ensure section is set
+            section: it.section || sec,
         }));
         allItems.push(...items);
     } catch (_e) {
-        // silently skip a missing/invalid section file
+        // silently skip missing section files
     }
 }
 
-// Build per-section candidate lists, then balanced-merge before limiting
+// Candidate shape
 type Cand = {
     stem: string;
     title: string;
     section: string;
     year: string;
-    preferredHref?: string; // <-- NEW: passthrough from manifest
-    collection?: { slug: string; title: string; url: string } | null; // optional
+    ar?: number;
+    preferredHref?: string;
+    collection?: { slug: string; title: string; url: string } | null;
 };
 
-// Group by section
-const bySection = new Map<string, Cand[]>();
-for (const it of allItems) {
-    if (typeof it.ar === 'number' && it.ar < 0.95) {
-        const sec = it.section!;
-        const stem = (it as any).stemFileSafe ?? encodeURIComponent(it.stem);
-        const cand: Cand = {
-            stem,
-            title: it.title || `${sec} artwork`,
-            section: sec,
-            year: it.year || '',
-            preferredHref: (it as any).preferredHref,         // <-- NEW
-            collection: (it as any).collection ?? null        // <-- optional, future caption
-        };
-        if (!bySection.has(sec)) bySection.set(sec, []);
-        bySection.get(sec)!.push(cand);
-    }
+function pushTo<K, V>(map: Map<K, V[]>, key: K, val: V) {
+    const arr = map.get(key);
+    if (arr) arr.push(val);
+    else map.set(key, [val]);
 }
+
+// Build per-section lists (shuffled for balance) and also keep ordered lists (for neighbors)
+const bySection = new Map<string, Cand[]>();
+const orderedBySection = new Map<string, Cand[]>();
+
+for (const it of allItems) {
+    const arNorm = normalizeAR(it);
+    if (!Number.isFinite(arNorm as number)) continue;
+
+    // Make absolutely sure `sec` is a string key we can index with
+    const sec = String(it.section || sections[0] || 'misc');
+    const stem = (it as any).stemFileSafe ?? encodeURIComponent(it.stem);
+
+    const cand: Cand = {
+        stem,
+        title: it.title || `${sec} artwork`,
+        section: sec,
+        year: it.year || '',
+        ar: arNorm,
+        preferredHref: (it as any).preferredHref,
+        collection: (it as any).collection ?? null
+    };
+
+    // Robust inserts (no undefined .push)
+    pushTo(bySection, sec, cand);
+    pushTo(orderedBySection, sec, cand);
+}
+
 
 // Seeded shuffle (stable for "daily", random for "random")
 const seed = mode === 'daily'
@@ -121,6 +164,8 @@ if (candidates.length === 0 && allItems.length) {
         title: it.title || `${it.section} artwork`,
         year: it.year || '',
         section: it.section!,
+        ar: (it as any).ar ?? 1,
+        thumbVersion: (it as any).thumbVersion,
         preferredHref: (it as any).preferredHref ?? `/${it.section}/#${encodeURIComponent(it.stem)}`,
         collection: (it as any).collection ?? null
     });
@@ -128,20 +173,38 @@ if (candidates.length === 0 && allItems.length) {
 
 const first = candidates[0];
 
-// srcset helpers (unchanged)
+// srcset helpers
 const widths = [720, 960, 1440];
+const versionSuffix = (c: typeof candidates[number]) => c.thumbVersion ? `?v=${encodeURIComponent(String(c.thumbVersion))}` : '';
 const set = (c: typeof candidates[number], ext: string) =>
-    widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext} ${w}w`).join(', ');
+    widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext}${versionSuffix(c)} ${w}w`).join(', ');
 
 const sizes = 'calc(min(1200px, 100vw - 2.5rem))';
 
 // Use preferredHref if present; otherwise fall back to section anchor
 const hrefFor = (c: typeof candidates[number]) => c.preferredHref ?? `/${c.section}/#${c.stem}`;
 
-const captionId = 'hero-caption';
-
-// Safely encode candidate data
+// Safely encode data for client
 const encoded = encodeURIComponent(JSON.stringify(candidates));
+const orderedPayload = Object.fromEntries(
+    Array.from(orderedBySection.entries(), ([sec, arr]) => [
+        sec,
+        arr.map(({ stem, title, year, ar, preferredHref, collection, thumbVersion }) => ({
+            stem,
+            title,
+            year,
+            ar,
+            thumbVersion,
+            section: sec,  // ✅ use the map key, guaranteed correct (or use item.section)
+            preferredHref,
+            collection: collection
+                ? { slug: collection.slug, title: collection.title, url: collection.url }
+                : null
+        }))
+    ])
+);
+
+const orderedEncoded = encodeURIComponent(JSON.stringify(orderedPayload));
 
 const intrinsicW = 1440;
 const intrinsicH = Math.round(intrinsicW / ar);
@@ -151,48 +214,76 @@ const intrinsicH = Math.round(intrinsicW / ar);
         id="hero-root"
         class="hero hero--intrinsic"
         data-candidates={encoded}
+        data-ordered={orderedEncoded}
         data-mode={mode}
         data-show-caption={String(showCaption)}
         data-caption-class={captionClass}
+        data-bias-horiz={String(biasHoriz)}
+        data-min-portrait-pct={String(minPortraitPct)}
+        data-max-landscape-pct={String(maxLandscapePct)}
+        data-portrait-ar={String(portraitAR)}
 >
-    <div class="hero-frame" style={`--hero-ar:${ar}`}>
+    <div class="hero-frame" style={`--hero-ar:${ar}; --hero-width:${maxLandscapePct}%`}>
         <figure class="hero-figure">
-            <picture>
-                <source id="hero-avif" type="image/avif" srcset={set(first, 'avif')} sizes={sizes}/>
-                <source id="hero-webp" type="image/webp" srcset={set(first, 'webp')} sizes={sizes}/>
-                <img
-                        id="hero-img"
-                        src={`/thumbs/${first.section}/${first.stem}-w960.jpg`}
-                        srcset={set(first, 'jpg')}
-                        sizes={sizes}
-                        alt={first.title}
-                        loading="eager"
-                        fetchpriority="high"
-                        decoding="async"
-                        width={intrinsicW}
-                        height={intrinsicH}
-                        aria-labelledby={showCaption ? "hero-overlay-text" : undefined}
-                />
-            </picture>
+            <!-- Tile A -->
+            <div class="hero-tile tile-a">
+                <picture>
+                    <source id="hero-avif" type="image/avif" srcset={set(first, 'avif')} sizes={sizes}/>
+                    <source id="hero-webp" type="image/webp" srcset={set(first, 'webp')} sizes={sizes}/>
+                    <img
+                            id="hero-img"
+                            src={`/thumbs/${first.section}/${first.stem}-w960.jpg${versionSuffix(first)}`}
+                            srcset={set(first, 'jpg')}
+                            sizes={sizes}
+                            alt={first.title}
+                            loading="eager"
+                            fetchpriority="high"
+                            decoding="async"
+                            width={intrinsicW}
+                            height={intrinsicH}
+                            aria-labelledby={showCaption ? "hero-overlay-text" : undefined}
+                    />
+                </picture>
 
-            {showCaption ? (
-                    <a id="hero-overlay-link" class="hero-overlay has-caption" href={hrefFor(first)}>
-          <span class="hero-chip">
-            <span id="hero-overlay-text">{first.title}</span>
-              {first.year && <span class="hero-year"> {first.year}</span>}
-          </span>
-                    </a>
-            ) : (
-                    <div class="hero-overlay no-caption" aria-hidden="true"></div>
-            )}
+                {showCaption ? (
+                        <a id="hero-overlay-link" class="hero-overlay has-caption" href={hrefFor(first)}>
+            <span class="hero-chip">
+              <span id="hero-overlay-text">{first.title}</span>
+                {first.year && <span class="hero-year"> {first.year}</span>}
+            </span>
+                        </a>
+                ) : (
+                        <div class="hero-overlay no-caption" aria-hidden="true"></div>
+                )}
+            </div>
+
+            <!-- Tile B (hidden unless two-up) -->
+            <div class="hero-tile tile-b" hidden>
+                <picture>
+                    <source id="hero2-avif" type="image/avif"/>
+                    <source id="hero2-webp" type="image/webp"/>
+                    <img id="hero2-img" alt="" loading="eager" decoding="async"/>
+                </picture>
+
+                {showCaption ? (
+                        <a id="hero2-overlay-link" class="hero-overlay has-caption" href="#">
+            <span class="hero-chip">
+              <span id="hero2-overlay-text"></span>
+              <span class="hero-year" id="hero2-year"></span>
+            </span>
+                        </a>
+                ) : (
+                        <div class="hero-overlay no-caption" aria-hidden="true"></div>
+                )}
+            </div>
         </figure>
+
         {first.collection && (
                 <p class="hero-caption">
-                    A project in the  <i>{first.section}</i> section
+                    A project in the <i>{first.section}</i> section
                     <a class="badge" href={first.collection.url}>{first.collection.title}</a>
                 </p>
         )}
-
     </div>
 </section>
 
@@ -203,62 +294,197 @@ const intrinsicH = Math.round(intrinsicW / ar);
         if (!root) return;
 
         let picks = [];
-        try { picks = JSON.parse(decodeURIComponent(root.dataset.candidates || '[]')); }
-        catch (_e) { return; }
+        try {
+            picks = JSON.parse(decodeURIComponent(root.dataset.candidates || '[]'));
+        } catch {
+            return;
+        }
         if (!Array.isArray(picks) || picks.length === 0) return;
+
+        let ordered = {};
+        try {
+            ordered = JSON.parse(decodeURIComponent(root.dataset.ordered || '{}'));
+        } catch {
+        }
 
         const mode = root.dataset.mode || 'random';
         const showCaption = root.dataset.showCaption === 'true';
 
-        let idx = 0;
-        if (mode === 'daily') {
-            idx = Math.floor(Math.floor(Date.now() / 86400000) % picks.length);
-        } else {
-            idx = Math.floor(Math.random() * picks.length);
+        const biasHoriz = Math.max(0, Math.min(1, Number(root.dataset.biasHoriz) || 0.7));
+        const minPortraitPct = Math.max(10, Math.min(100, Number(root.dataset.minPortraitPct) || 50));
+        const maxLandscapePct = Math.max(minPortraitPct, Math.min(100, Number(root.dataset.maxLandscapePct) || 100));
+        const portraitAR = Number(root.dataset.portraitAr) || 0.8;
+
+        // Weighted pick (favor horizontals per biasHoriz)
+        function pickWeighted(arr) {
+            if (!arr.length) return null;
+            const minAR = 9 / 16, maxAR = 16 / 9;
+            const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+            const norm = (r) => clamp((r - minAR) / (maxAR - minAR), 0, 1);
+            const weights = arr.map(c => {
+                const r = (typeof c.ar === 'number' && isFinite(c.ar)) ? c.ar : 1.0;
+                const arNorm = norm(r);
+                const base = 1 - biasHoriz;
+                return Math.max(0.0001, base + biasHoriz * arNorm);
+            });
+            const total = weights.reduce((a, b) => a + b, 0);
+            const t = (mode === 'daily')
+                ? (Math.floor(Date.now() / 86400000) % 997) / 997
+                : Math.random();
+            let acc = 0;
+            for (let i = 0; i < arr.length; i++) {
+                acc += weights[i] / total;
+                if (t <= acc) return arr[i];
+            }
+            return arr[arr.length - 1];
         }
 
-        const c = picks[idx];
+        // Choose first tile
+        let c;
+        if (mode === 'daily') {
+            const idx = Math.floor(Math.floor(Date.now() / 86400000) % picks.length);
+            c = picks[idx];
+        } else {
+            c = pickWeighted(picks) || picks[0];
+        }
+
         const widths = [960, 1440, 1920];
-        const buildSet = (ext) => widths.map(w => `/thumbs/${c.section}/${c.stem}-w${w}.${ext} ${w}w`).join(', ');
+        const versionSuffix = (item) => item.thumbVersion ? `?v=${encodeURIComponent(item.thumbVersion.toString())}` : '';
+        const buildSet = (item, ext) => widths.map(w => `/thumbs/${item.section}/${item.stem}-w${w}.${ext}${versionSuffix(item)} ${w}w`).join(', ');
 
         const avif = document.getElementById('hero-avif');
         const webp = document.getElementById('hero-webp');
-        const img  = document.getElementById('hero-img');
+        const img = document.getElementById('hero-img');
 
-        if (avif) avif.setAttribute('srcset', buildSet('avif'));
-        if (webp) webp.setAttribute('srcset', buildSet('webp'));
+        if (avif) avif.setAttribute('srcset', buildSet(c, 'avif'));
+        if (webp) webp.setAttribute('srcset', buildSet(c, 'webp'));
         if (img) {
-            img.setAttribute('srcset', buildSet('jpg'));
-            img.setAttribute('src', `/thumbs/${c.section}/${c.stem}-w960.jpg`);
+            img.setAttribute('srcset', buildSet(c, 'jpg'));
+            img.setAttribute('src', `/thumbs/${c.section}/${c.stem}-w960.jpg${versionSuffix(c)}`);
             img.setAttribute('alt', c.title || 'hero image');
         }
 
-        // Update overlay link + text
+        // Overlay/link for tile A
+        const hrefFor = (x) => x.preferredHref || `/${x.section}/#${x.stem}`;
         const textEl = document.getElementById('hero-overlay-text');
         if (textEl) textEl.textContent = c.title || 'View section';
-
         if (showCaption) {
             const linkEl = document.getElementById('hero-overlay-link');
-            // Prefer manifest-provided URL; fall back to section anchor
-            const href = c.preferredHref || `/${c.section}/#${c.stem}`;
-            if (linkEl) linkEl.setAttribute('href', href);
+            if (linkEl) linkEl.setAttribute('href', hrefFor(c));
         }
-
-        // Optional: update year if you render it
         const yearEl = document.querySelector('.hero-chip .hero-year');
         if (yearEl) yearEl.textContent = c.year ? ` ${c.year}` : '';
 
-        // Optional: update caption if it exists
+        // Optional: update caption below
         const cap = document.querySelector('.hero-caption');
         if (cap) {
             if (c.collection) {
-                cap.innerHTML =
-                    `A project in the  <i>${c.section}</i> section – <a class="badge" href="${c.collection.url}">${c.collection.title}</a>`;
+                cap.innerHTML = `A project in the  <i>${c.section}</i> section – <a class="badge" href="${c.collection.url}">${c.collection.title}</a>`;
             } else {
                 cap.textContent = '';
             }
         }
 
+        // Width scaling by AR
+        const frame = root.querySelector('.hero-frame');
+        const minAR = 9 / 16, maxAR = 16 / 9;
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const ar = (typeof c.ar === 'number' && isFinite(c.ar)) ? c.ar : 1.0;
+        const t = clamp((ar - minAR) / (maxAR - minAR), 0, 1);
+        const pct = Math.round(minPortraitPct + t * (maxLandscapePct - minPortraitPct));
+        if (frame) {
+            frame.style.setProperty('--hero-width', `${pct}%`);
+            frame.style.setProperty('--hero-ar', `${ar}`);   // <-- NEW: reflect the chosen image’s AR
+        }
+
+        // ---- Neighbor logic for two-up (same section; prefer same collection; nearest) ----
+        function findNeighborSameSection(first) {
+            const list = ordered[first.section] || [];
+            if (!list.length) return null;
+            const idx = list.findIndex(x => x.stem === first.stem);
+            if (idx < 0) return null;
+
+            const wantCollection = !!(first.collection && first.collection.slug);
+            const targetSlug = wantCollection ? first.collection.slug : null;
+
+            const windowSize = 4; // look ±N items
+            const candidates = [];
+            for (let d = 1; d <= windowSize; d++) {
+                for (const j of [idx - d, idx + d]) {
+                    if (j < 0 || j >= list.length) continue;
+                    const item = list[j];
+                    const isPortrait = typeof item.ar === 'number' && item.ar < portraitAR;
+                    const sameColl = targetSlug ? (item.collection && item.collection.slug === targetSlug) : false;
+                    candidates.push({item, d, isPortrait, sameColl});
+                }
+            }
+            // Rank: sameColl + portrait + proximity
+            candidates.sort((a, b) => {
+                const scoreA = (a.sameColl ? 10 : 0) + (a.isPortrait ? 5 : 0) - a.d * 0.01;
+                const scoreB = (b.sameColl ? 10 : 0) + (b.isPortrait ? 5 : 0) - b.d * 0.01;
+                return scoreB - scoreA;
+            });
+            return candidates.length ? candidates[0].item : null;
+        }
+
+        if (ar < portraitAR) {
+            const neighbor = findNeighborSameSection(c);
+            if (neighbor) {
+                const set2 = (ext) => [960, 1440].map(w => `/thumbs/${neighbor.section}/${neighbor.stem}-w${w}.${ext}${versionSuffix(neighbor)} ${w}w`).join(', ');
+                const avif2 = document.getElementById('hero2-avif');
+                const webp2 = document.getElementById('hero2-webp');
+                const img2 = document.getElementById('hero2-img');
+
+                if (avif2) avif2.setAttribute('srcset', set2('avif'));
+                if (webp2) webp2.setAttribute('srcset', set2('webp'));
+                if (img2) {
+                    img2.setAttribute('srcset', set2('jpg'));
+                    img2.setAttribute('src', `/thumbs/${neighbor.section}/${neighbor.stem}-w960.jpg${versionSuffix(neighbor)}`);
+                    img2.setAttribute('alt', neighbor.title || 'hero image');
+                }
+
+                // Overlay/link for tile B
+                const text2 = document.getElementById('hero2-overlay-text');
+                if (text2) text2.textContent = neighbor.title || '';
+                const year2 = document.getElementById('hero2-year');
+                if (year2) year2.textContent = neighbor.year ? ` ${neighbor.year}` : '';
+
+                const linkA = document.getElementById('hero-overlay-link');
+                const linkB = document.getElementById('hero2-overlay-link');
+
+                // If FIRST has a collection, both link to collection page; else each to its anchor
+                let hrefA = hrefFor(c);
+                let hrefB = neighbor.preferredHref || `/${neighbor.section}/#${neighbor.stem}`;
+                if (c.collection && c.collection.url) {
+                    hrefA = c.collection.url;
+                    hrefB = c.collection.url;
+                }
+                if (linkA) linkA.setAttribute('href', hrefA);
+                if (linkB) linkB.setAttribute('href', hrefB);
+
+                // Reveal two-up
+                // Reveal two-up
+                const tileB = root.querySelector('.tile-b');
+                if (tileB) tileB.hidden = false;
+                if (frame) {
+                    frame.classList.add('two-up');
+
+                    // --- two-up width override (simple rule) ---
+                    // If either tile is VERY vertical (<= 0.6), shrink hero to 70%; else keep 100%.
+                    const aAR = (typeof c.ar === 'number' && isFinite(c.ar)) ? c.ar : 1.0;
+                    const bAR = (neighbor && typeof neighbor.ar === 'number' && isFinite(neighbor.ar)) ? neighbor.ar : aAR;
+
+                    const twoUpCutoff = 0.6;     // tweakable
+                    const twoUpNarrowPct = 70;   // 70% when very vertical present
+                    const twoUpNormalPct = 100;  // 100% otherwise
+
+                    const veryVerticalPresent = Math.min(aAR, bAR) <= twoUpCutoff;
+                    frame.style.setProperty('--hero-width', `${veryVerticalPresent ? twoUpNarrowPct : twoUpNormalPct}%`);
+                }
+                
+
+            }
+        }
     })();
 </script>
     )}

@@ -4,7 +4,7 @@ import site from '../data/site.json';
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Grid from '../components/Grid.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import { comparePages, displayTitle, isDirectFolderChild, normalizePagePath, pagePath } from '../lib/page-routing';
 import type { GalleryItem } from '../lib/types';
 
@@ -19,14 +19,14 @@ export async function getStaticPaths() {
 }
 
 const { page, pages } = Astro.props;
-const { Content } = await page.render();
+const { Content } = await render(page);
 const currentPath = pagePath(page);
 const currentKey = currentPath.replace(/^\/|\/$/g, '');
 
 const sectionModules = import.meta.glob<{ default: GalleryItem[] }>('../data/sections/*.json', { eager: true });
-const collectionModules = import.meta.glob<{ default: { title: string; items: GalleryItem[] } }>('../data/collections/*/*.json', { eager: true });
+const collectionModules = import.meta.glob<{ default: { title: string; items: GalleryItem[] } }>('../data/collections/**/*.json', { eager: true });
 
-const galleryItems = page.data.gallery
+const galleryItems = page.data.gallery === true
     ? sectionModules[`../data/sections/${currentKey}.json`]?.default ?? []
     : [];
 
@@ -88,10 +88,55 @@ function firstImageFromItems(items: GalleryItem[] = []) {
     if (image) return normalizeImageSrc(image.src || image.href);
 
     const thumb = items.find((item) => item?.section && item?.stem);
-    return thumb ? `/thumbs/${thumb.section}/${thumb.stem}-w480.jpg` : null;
+    const versionSuffix = thumb?.thumbVersion ? `?v=${encodeURIComponent(String(thumb.thumbVersion))}` : '';
+    return thumb ? `/thumbs/${thumb.section}/${thumb.stem}-w480.jpg${versionSuffix}` : null;
 }
 
-function firstImageFromGallery(entry: typeof page) {
+function normalizedWords(value = '') {
+    return value
+        .toLowerCase()
+        .replace(/['’]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(Boolean);
+}
+
+function itemLooksLikeIcon(item: GalleryItem) {
+    const words = normalizedWords([item.stem, item.title, item.slug].filter(Boolean).join(' '));
+    return words.at(-1) === 'icon';
+}
+
+function itemMatchesEntry(item: GalleryItem, entry: typeof page) {
+    const key = galleryKeyForPath(pagePath(entry));
+    const slug = key.split('/').at(-1) || key;
+    const needles = [
+        displayTitle(entry.data.title),
+        slug,
+        slug.replace(/-/g, ' '),
+    ].map((value) => normalizedWords(value).join(' ')).filter(Boolean);
+    const haystack = normalizedWords([item.stem, item.title, item.slug].filter(Boolean).join(' ')).join(' ');
+
+    return needles.some((needle) => haystack.includes(needle));
+}
+
+function preferredIconForEntry(entry: typeof page) {
+    const key = galleryKeyForPath(pagePath(entry));
+    const section = key.split('/')[0];
+    const sectionItems = sectionModules[`../data/sections/${section}.json`]?.default ?? [];
+    const icon = sectionItems.find((item) => itemLooksLikeIcon(item) && itemMatchesEntry(item, entry));
+
+    const versionSuffix = icon?.thumbVersion ? `?v=${encodeURIComponent(String(icon.thumbVersion))}` : '';
+    return icon?.section && icon?.stem ? `/thumbs/${icon.section}/${icon.stem}-w480.jpg${versionSuffix}` : null;
+}
+
+function firstImageFromGallery(entry: typeof page, preferIcon = false) {
+    if (preferIcon) {
+        const iconImage = preferredIconForEntry(entry);
+        if (iconImage) return iconImage;
+    }
+
     const key = galleryKeyForPath(pagePath(entry));
     const sectionItems = sectionModules[`../data/sections/${key}.json`]?.default ?? [];
     const sectionImage = firstImageFromItems(sectionItems);
@@ -114,11 +159,11 @@ function firstImageFromBody(body = '') {
     return null;
 }
 
-function firstImageForEntry(entry: typeof page, seen = new Set<string>()) {
+function firstImageForEntry(entry: typeof page, seen = new Set<string>(), preferIcon = false) {
     if (!entry || seen.has(entry.id)) return null;
     seen.add(entry.id);
 
-    const galleryImage = firstImageFromGallery(entry);
+    const galleryImage = firstImageFromGallery(entry, preferIcon);
     if (galleryImage) return galleryImage;
 
     const directImage = firstImageFromBody(entry.body);
@@ -129,7 +174,7 @@ function firstImageForEntry(entry: typeof page, seen = new Set<string>()) {
         .sort(comparePages);
 
     for (const descendant of descendants) {
-        const image = firstImageForEntry(descendant, seen);
+        const image = firstImageForEntry(descendant, seen, preferIcon);
         if (image) return image;
     }
 
@@ -157,9 +202,9 @@ const relatedPages = folderChildren.map((child) => ({
     path: pagePath(child),
     title: displayTitle(child.data.title),
     description: cleanHtml(child.data.excerpt || ''),
-    image: firstImageForEntry(child) || sectionFallbackImage,
+    image: firstImageForEntry(child, new Set<string>(), true) || sectionFallbackImage,
 }));
-const showGallery = relatedPages.length === 0;
+const showGallery = page.data.gallery !== false && relatedPages.length === 0;
 
 const title = displayTitle(page.data.title);
 const description = page.data.excerpt || `${title} by ${site.authorName}`;

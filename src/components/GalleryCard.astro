@@ -17,7 +17,8 @@ const anchor   = `/${item.section}#${stemSafe}`;
 
 // If no lightbox, link to the section page + anchor
 const anchorHref = `/${item.section}#${stemSafe}`;
-const originalHref = item.base ? `/images/${item.section}/${item.base}` : anchorHref;
+const versionSuffix = item.thumbVersion ? `?v=${encodeURIComponent(String(item.thumbVersion))}` : '';
+const originalHref = item.base ? `/images/${item.section}/${item.base}${versionSuffix}` : anchorHref;
 const hrefTarget = linkToAnchor ? anchor : (useLightbox ? originalHref : anchorHref);
 
 
@@ -37,6 +38,7 @@ const ar = item.ar ?? null; // height/width from manifest
         data-sale={item.sale ?? 'PRIVATE'}
         data-section={item.section}
         data-stem={stemSafe}
+        data-thumb-version={item.thumbVersion ?? ''}
 >
     <GalleryImage item={item} priority={priority} variant={variant} />
 

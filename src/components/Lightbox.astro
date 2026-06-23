@@ -52,19 +52,22 @@ import site from '../data/site.json';
         };
 
         // Build a thumbs URL
-        const thumbUrl = (section, stem, w, ext='avif') =>
-            `/thumbs/${section}/${stem}-w${w}.${ext}`;
+        const versionSuffix = (version) => version ? `?v=${encodeURIComponent(String(version))}` : '';
+        const thumbUrl = (section, stem, w, ext='avif', version='') =>
+            `/thumbs/${section}/${stem}-w${w}.${ext}${versionSuffix(version)}`;
 
-        const detailsUrl = (section) => `/details/${section}.json`;
+        const detailsUrl = (section, version='') =>
+            `/details/${section}.json${versionSuffix(version)}`;
 
-        const loadDetails = async (section) => {
+        const loadDetails = async (section, version='') => {
             if (!section) return {};
-            if (!detailCache.has(section)) {
-                detailCache.set(section, fetch(detailsUrl(section), { cache: 'force-cache' })
+            const cacheKey = `${section}:${version || 'default'}`;
+            if (!detailCache.has(cacheKey)) {
+                detailCache.set(cacheKey, fetch(detailsUrl(section, version), { cache: 'force-cache' })
                     .then((res) => (res.ok ? res.json() : {}))
                     .catch(() => ({})));
             }
-            return detailCache.get(section);
+            return detailCache.get(cacheKey);
         };
 
         const data = cards.map((card) => {
@@ -75,9 +78,10 @@ import site from '../data/site.json';
             const sale   = (card.dataset.sale || 'PRIVATE').toUpperCase();
             const section = card.dataset.section || '';
             const stem    = card.dataset.stem || '';
+            const thumbVersion = card.dataset.thumbVersion || '';
             const ar      = parseFloat(card.dataset.ar || '') || null;
 
-            return { i, href, title, year, sale, section, stem, ar };
+            return { i, href, title, year, sale, section, stem, thumbVersion, ar };
         });
 
         let idx = 0;
@@ -91,7 +95,7 @@ import site from '../data/site.json';
             const n = new Image();
             n.decoding = 'async';
             n.loading = 'eager';
-            n.src = thumbUrl(d.section, d.stem, w, 'avif');
+            n.src = thumbUrl(d.section, d.stem, w, 'avif', d.thumbVersion);
         };
 
         const renderCTA = ({ title, sale, hasDesc, hrefFull }) => {
@@ -124,7 +128,7 @@ import site from '../data/site.json';
 
             // Prefer AVIF; browser falls back to JPEG if unsupported
             if (item.section && item.stem) {
-                imgEl.src = thumbUrl(item.section, item.stem, w, 'avif');
+                imgEl.src = thumbUrl(item.section, item.stem, w, 'avif', item.thumbVersion);
             } else {
                 imgEl.src = item.href;
             }
@@ -142,7 +146,7 @@ import site from '../data/site.json';
             if (idx + 1 < data.length) preload(idx + 1);
             if (idx - 1 >= 0) preload(idx - 1);
 
-            const details = await loadDetails(item.section);
+            const details = await loadDetails(item.section, item.thumbVersion);
             if (token !== showToken) return;
 
             const detail = details?.[item.stem] || {};

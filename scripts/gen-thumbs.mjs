@@ -18,7 +18,13 @@ const OUT_DIR = path.join(ROOT, 'public', 'thumbs');    // thumbs here
 const WIDTHS = [320, 480, 640, 720, 960, 1280, 1440, 1920];
 const QUALITY_JPG = 82;
 const QUALITY_WEBP = 82;
-const QUALITY_AVIF = 50;
+const FORCE_THUMBS = process.env.FORCE_THUMBS === '1';
+const avifQualityForWidth = (width) => {
+    if (width <= 480) return 38;
+    if (width <= 720) return 42;
+    if (width <= 960) return 46;
+    return 50;
+};
 
 // …
 const DATA_THUMBS_DIR = path.join(ROOT, 'src', 'data', 'thumbs');
@@ -33,6 +39,17 @@ function assertNoHashes(basenames) {
             `Found filenames containing '#', aborting thumbnail generation:\n${list}\n` +
             `Rename these files so URLs map 1:1 to files.`
         );
+    }
+}
+
+async function shouldWriteThumb(srcStat, outAbs) {
+    if (FORCE_THUMBS) return true;
+
+    try {
+        const outStat = await fs.stat(outAbs);
+        return srcStat.mtimeMs > outStat.mtimeMs;
+    } catch {
+        return true;
     }
 }
 
@@ -70,9 +87,11 @@ async function generate() {
 
         for (const rel of files) {
             const srcAbs = path.join(inSection, rel);
+            const srcStat = await fs.stat(srcAbs);
             const base = path.basename(srcAbs);
             const ext = path.extname(base);
             const stem = base.slice(0, -ext.length);
+            let writtenForSource = 0;
 
             // NEW: read intrinsic dimensions once
             let metaW = null, metaH = null;
@@ -94,11 +113,10 @@ async function generate() {
                     const relOut = path.join(section, `${stem}-w${w}.jpg`);
                     const outAbs = path.join(OUT_DIR, relOut);
                     expected.add(relOut);
-                    try {
-                        await fs.access(outAbs);
-                    } catch {
+                    if (await shouldWriteThumb(srcStat, outAbs)) {
                         await fs.mkdir(path.dirname(outAbs), {recursive: true});
                         await pipeline.clone().jpeg({quality: QUALITY_JPG, mozjpeg: true}).toFile(outAbs);
+                        writtenForSource++;
                     }
                 }
 
@@ -107,11 +125,10 @@ async function generate() {
                     const relOut = path.join(section, `${stem}-w${w}.webp`);
                     const outAbs = path.join(OUT_DIR, relOut);
                     expected.add(relOut);
-                    try {
-                        await fs.access(outAbs);
-                    } catch {
+                    if (await shouldWriteThumb(srcStat, outAbs)) {
                         await fs.mkdir(path.dirname(outAbs), {recursive: true});
                         await pipeline.clone().webp({quality: QUALITY_WEBP}).toFile(outAbs);
+                        writtenForSource++;
                     }
                 }
 
@@ -120,13 +137,15 @@ async function generate() {
                     const relOut = path.join(section, `${stem}-w${w}.avif`);
                     const outAbs = path.join(OUT_DIR, relOut);
                     expected.add(relOut);
-                    try {
-                        await fs.access(outAbs);
-                    } catch {
+                    if (await shouldWriteThumb(srcStat, outAbs)) {
                         await fs.mkdir(path.dirname(outAbs), {recursive: true});
-                        await pipeline.clone().avif({quality: QUALITY_AVIF}).toFile(outAbs);
+                        await pipeline.clone().avif({quality: avifQualityForWidth(w)}).toFile(outAbs);
+                        writtenForSource++;
                     }
                 }
+            }
+            if (writtenForSource > 0) {
+                console.log(`↻ ${section}/${rel}: wrote ${writtenForSource} thumbnails`);
             }
             // NEW: write _meta.json to src/data/thumbs/<section>/_meta.json
             const outMetaDir = path.join(DATA_THUMBS_DIR, section);

@@ -2,6 +2,7 @@ export type GalleryItem = {
     section: string;
     stem: string;
     base?: string;
+    thumbVersion?: number;
     title: string;
     year?: string;
     slug: string;

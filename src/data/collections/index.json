@@ -1,17 +1,5 @@
 [
   {
-    "section": "prints",
-    "slug": "exolith-series",
-    "title": "exolith series",
-    "count": 5
-  },
-  {
-    "section": "prints",
-    "slug": "systems",
-    "title": "systems",
-    "count": 4
-  },
-  {
     "section": "applications",
     "slug": "visual-synthesizer",
     "title": "Visual Synthesizer",
@@ -28,5 +16,17 @@
     "slug": "hypocenter",
     "title": "hypocenter",
     "count": 5
+  },
+  {
+    "section": "prints",
+    "slug": "exolith-series",
+    "title": "exolith series",
+    "count": 5
+  },
+  {
+    "section": "prints",
+    "slug": "systems",
+    "title": "systems",
+    "count": 4
   }
 ]
